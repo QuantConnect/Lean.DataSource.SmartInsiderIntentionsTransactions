@@ -27,7 +27,7 @@ using QuantConnect.DataSource;
 namespace QuantConnect.DataLibrary.Tests
 {
     [TestFixture]
-    public class MyCustomDataTypeTests
+    public class SmartInsiderTransactionsTests
     {
         [Test]
         public void JsonRoundTrip()
@@ -41,6 +41,7 @@ namespace QuantConnect.DataLibrary.Tests
         }
 
         [Test]
+	[Ignore("ProtoBuf not implemented for this data type yet")]
         public void ProtobufRoundTrip()
         {
             var expected = CreateNewInstance();
@@ -87,12 +88,56 @@ namespace QuantConnect.DataLibrary.Tests
 
         private BaseData CreateNewInstance()
         {
-            return new MyCustomDataType
+            return new SmartInsiderTransaction
             {
                 Symbol = Symbol.Empty,
                 Time = DateTime.Today,
                 DataType = MarketDataType.Base,
-                SomeCustomProperty = "This is some market related information"
+
+                TransactionID = "12345",
+                EventType = SmartInsiderEventType.Intention,
+                LastUpdate = new DateTime(2021, 6, 29),
+                LastIDsUpdate = null,
+                ISIN = "10923409823409",
+                USDMarketCap = null,
+                CompanyID = 1000,
+                ICBIndustry = "Rare Metals",
+                ICBSuperSector = "Materials",
+                ICBSector = "Mining",
+                ICBSubSector = "Gold",
+                ICBCode = null,
+                CompanyName = "ABCDEFGHIJKLMNOP",
+                PreviousResultsAnnouncementDate = null,
+                NextResultsAnnouncementsDate = null,
+                NextCloseBegin = null,
+                LastCloseEnded = null,
+                SecurityDescription = "unknown",
+                TickerCountry = "US",
+                TickerSymbol = "ABCDEFGHIJKLMNOP",
+                AnnouncementDate = new DateTime(2021, 6, 29),
+                TimeReleased = new DateTime(2021, 6, 29, 8, 0, 0),
+                TimeProcessed = new DateTime(2021, 6, 29, 4, 0, 0),
+                TimeReleasedUtc = new DateTime(2021, 6, 29, 8, 0, 0),
+                TimeProcessedUtc = new DateTime(2021, 6, 29, 4, 0, 0),
+                AnnouncedIn = "US",
+
+                BuybackDate = null,
+                Execution = SmartInsiderExecution.Market,
+                ExecutionEntity = SmartInsiderExecutionEntity.Broker,
+                ExecutionHolding = SmartInsiderExecutionHolding.SatisfyStockVesting,
+                Currency = "USD",
+                ExecutionPrice = null,
+                Amount = null,
+                GBPValue = null,
+                EURValue = null,
+                USDValue = null,
+                NoteText = "This is a test #2",
+                BuybackPercentage = null,
+                VolumePercentage = null,
+                ConversionRate = null,
+                AmountAdjustedFactor = null,
+                PriceAdjustedFactor = null,
+                TreasuryHolding = 5
             };
         }
     }

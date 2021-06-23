@@ -25,9 +25,8 @@ namespace QuantConnect.DataLibrary.Tests
     /// <summary>
     /// Example algorithm using the custom data type as a source of alpha
     /// </summary>
-    public class CustomDataAlgorithm : QCAlgorithm
+    public class SmartInsiderIntentionsTransactionsDataAlgorithm : QCAlgorithm
     {
-        private Symbol _customDataSymbol;
         private Symbol _equitySymbol;
 
         /// <summary>
@@ -35,10 +34,12 @@ namespace QuantConnect.DataLibrary.Tests
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
+            SetStartDate(2019, 1, 1);  //Set Start Date
+            SetEndDate(2021, 1, 1);    //Set End Date
             _equitySymbol = AddEquity("SPY").Symbol;
-            _customDataSymbol = AddData<MyCustomDataType>(_equitySymbol).Symbol;
+
+            AddData<SmartInsiderIntention>(_equitySymbol);
+            AddData<SmartInsiderTransaction>(_equitySymbol);
         }
 
         /// <summary>
@@ -47,18 +48,16 @@ namespace QuantConnect.DataLibrary.Tests
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            var data = slice.Get<MyCustomDataType>();
-            if (!data.IsNullOrEmpty())
+            var intentions = slice.Get<SmartInsiderIntention>();
+            if (!intentions.IsNullOrEmpty())
             {
-                // based on the custom data property we will buy or short the underlying equity
-                if (data[_customDataSymbol].SomeCustomProperty == "buy")
-                {
-                    SetHoldings(_equitySymbol, 1);
-                }
-                else if (data[_customDataSymbol].SomeCustomProperty == "sell")
-                {
-                    SetHoldings(_equitySymbol, -1);
-                }
+                SetHoldings(_equitySymbol, 0.5m);
+                return;
+            }
+            var transactions = slice.Get<SmartInsiderTransaction>();
+            if (!transactions.IsNullOrEmpty()) 
+            {
+                SetHoldings(_equitySymbol, -0.5m);
             }
         }
 
