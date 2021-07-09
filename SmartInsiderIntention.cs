@@ -28,6 +28,11 @@ namespace QuantConnect.DataSource
     public class SmartInsiderIntention : SmartInsiderEvent
     {
         /// <summary>
+        /// Data source ID
+        /// </summary>
+        public static int DataSourceId { get; } = 2018;
+
+        /// <summary>
         /// Describes how the transaction was executed
         /// </summary>
         public SmartInsiderExecution? Execution { get; set; }

@@ -28,6 +28,11 @@ namespace QuantConnect.DataSource
     public class SmartInsiderTransaction : SmartInsiderEvent
     {
         /// <summary>
+        /// Data source ID
+        /// </summary>
+        public static int DataSourceId { get; } = 2019;
+
+        /// <summary>
         /// Date traded through the market
         /// </summary>
         public DateTime? BuybackDate { get; set; }
