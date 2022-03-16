@@ -393,8 +393,8 @@ namespace QuantConnect.DataProcessing
             {
                 var date = kvp.Key;
 
-                var finalFile = new FileInfo(Path.Combine(destinationDirectory.FullName, "universe", $"{date}.tsv"));
-                var processedFile = new FileInfo(Path.Combine(_processedDirectory.FullName, destinationDirectory.Name, "universe", $"{date}.tsv"));
+                var finalFile = new FileInfo(Path.Combine(destinationDirectory.FullName, "universe", $"{date}.csv"));
+                var processedFile = new FileInfo(Path.Combine(_processedDirectory.FullName, destinationDirectory.Name, "universe", $"{date}.csv"));
                 var fileContents = new List<T>();
 
                 if (processedFile.Exists)
@@ -410,12 +410,12 @@ namespace QuantConnect.DataProcessing
                 var line = kvp.Value.Select(kv => $"{kv.Key},{kv.Value}").ToList();
                 fileContents.AddRange(line);
 
-                var tsvContents = fileContents
+                var csvContents = fileContents
                     .OrderBy(x => x.Split(",").First())
                     .Select(x => x.ToLine())
                     .Distinct();
 
-                File.WriteAllLines(finalFile.FullName, tsvContents);
+                File.WriteAllLines(finalFile.FullName, csvContents);
             }
         }
         
