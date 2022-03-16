@@ -41,7 +41,7 @@ namespace QuantConnect.DataProcessing
             var processingDateValue = Environment.GetEnvironmentVariable("QC_DATAFLEET_DEPLOYMENT_DATE");
             var processingDate = Parse.DateTimeExact(processingDateValue, "yyyyMMdd");
             
-            SmartInsiderConverter instance;
+            SmartInsiderConverter instance = null;
             try
             {
                 // Pass in the values we got from the configuration into the downloader/converter.
@@ -49,8 +49,8 @@ namespace QuantConnect.DataProcessing
             }
             catch (Exception err)
             {
-                Log.Error(err, $"Smart Insider converter instance failed to be constructed");
-                return 1;
+                Log.Error(err, $"QuantConnect.DataProcessing.Program.Main(): Smart Insider converter instance failed to be constructed");
+                Environment.Exit(1);
             }
 
             // No need to edit anything below here for most use cases.
@@ -62,13 +62,13 @@ namespace QuantConnect.DataProcessing
                 if (!success)
                 {
                     Log.Error($"QuantConnect.DataProcessing.Program.Main(): Failed to process Smart Insider data");
-                    return 1;
+                    Environment.Exit(1);
                 }
             }
             catch (Exception err)
             {
-                Log.Error(err, $"The Smart Insider converter exited unexpectedly");
-                return 1;
+                Log.Error(err, $"QuantConnect.DataProcessing.Program.Main(): The Smart Insider converter exited unexpectedly");
+                Environment.Exit(1);
             }
             finally
             {
@@ -77,7 +77,7 @@ namespace QuantConnect.DataProcessing
             }
             
             // The downloader/converter was successful
-            return 0;
+            Environment.Exit(0);
         }
     }
 }
