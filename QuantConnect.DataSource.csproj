@@ -25,10 +25,14 @@
     <None Remove=".gitignore" />
     <Compile Remove="SmartInsiderDataAlgorithm.cs" />
     <Compile Remove="SmartInsiderEventBenchmarkAlgorithm.cs" />
+    <Compile Remove="SmartInsiderIntentionUniverseSelectionAlgorithm.cs" />
     <Compile Remove="SmartInsiderTransactionAlgorithm.cs" />
+    <Compile Remove="SmartInsiderTransactionUniverseSelectionAlgorithm.cs" />
     <None Remove="SmartInsiderDataAlgorithm.py" />
     <None Remove="SmartInsiderEventBenchmarkAlgorithm.py" />
+    <None Remove="SmartInsiderIntentionUniverseSelectionAlgorithm.py" />
     <None Remove="SmartInsiderTransactionAlgorithm.py" />
+    <None Remove="SmartInsiderTransactionUniverseSelectionAlgorithm.py" />
   </ItemGroup>
 
 </Project>

@@ -7,10 +7,14 @@
     <Compile Include="..\Demonstration.cs" Link="Demonstration.cs" />
     <Compile Include="..\SmartInsiderDataAlgorithm.cs" Link="SmartInsiderDataAlgorithm.cs" />
     <Compile Include="..\SmartInsiderEventBenchmarkAlgorithm.cs" Link="SmartInsiderEventBenchmarkAlgorithm.cs" />
+    <Compile Include="..\SmartInsiderIntentionUniverseSelectionAlgorithm.cs" Link="SmartInsiderIntentionUniverseSelectionAlgorithm.cs" />
     <Compile Include="..\SmartInsiderTransactionAlgorithm.cs" Link="SmartInsiderTransactionAlgorithm.cs" />
+    <Compile Include="..\SmartInsiderTransactionUniverseSelectionAlgorithm.cs" Link="SmartInsiderTransactionUniverseSelectionAlgorithm.cs" />
     <Content Include="..\SmartInsiderDataAlgorithm.py" Link="SmartInsiderDataAlgorithm.py" />
     <Content Include="..\SmartInsiderEventBenchmarkAlgorithm.py" Link="SmartInsiderEventBenchmarkAlgorithm.py" />
+    <Content Include="..\SmartInsiderIntentionUniverseSelectionAlgorithm.py" Link="SmartInsiderIntentionUniverseSelectionAlgorithm.py" />
     <Content Include="..\SmartInsiderTransactionAlgorithm.py" Link="SmartInsiderTransactionAlgorithm.py" />
+    <Content Include="..\SmartInsiderTransactionUniverseSelectionAlgorithm.py" Link="SmartInsiderTransactionUniverseSelectionAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="protobuf-net" Version="3.0.29" />
