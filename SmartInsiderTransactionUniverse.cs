@@ -90,7 +90,7 @@ namespace QuantConnect.DataSource
                     "universe",
                     $"{date:yyyyMMdd}.tsv"
                 ),
-                SubscriptionTransportMedium.LocalFile,
+                SubscriptionTransportMedium.LocalFile
             );
         }
 
@@ -107,13 +107,13 @@ namespace QuantConnect.DataSource
             var csv = line.Split(',');
             var usdValue = long.Parse(csv[5]);
             
-            return new SmartInsiderTransactionUniverse(line)
+            return new SmartInsiderTransactionUniverse
             {
                 Symbol = new Symbol(SecurityIdentifier.Parse(csv[0]), csv[1]),
                 Time = date - Period,
                 Value = usdValue,
 
-                Amount = int.Parse(csv[2]);
+                Amount = int.Parse(csv[2]),
                 MinimumExecutionPrice = decimal.Parse(csv[3], NumberStyles.Any, CultureInfo.InvariantCulture),
                 MaximumExecutionPrice = decimal.Parse(csv[4], NumberStyles.Any, CultureInfo.InvariantCulture),
                 USDValue = usdValue,
