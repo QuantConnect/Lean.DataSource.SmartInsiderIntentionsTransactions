@@ -100,7 +100,7 @@ namespace QuantConnect.DataSource
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             var csv = line.Split(',');
-            var amountValue = long.Parse(csv[3]);
+            var amountValue = long.Parse(csv[6]);
             
             return new SmartInsiderIntentionUniverse
             {
@@ -108,12 +108,12 @@ namespace QuantConnect.DataSource
                 Time = date - Period,
                 Value = amountValue,
 
-                Amount = int.Parse(csv[2]),
+                MinimumPrice = decimal.Parse(csv[3], NumberStyles.Any, CultureInfo.InvariantCulture),
+                MaximumPrice = decimal.Parse(csv[4], NumberStyles.Any, CultureInfo.InvariantCulture),
+                USDMarketCap = decimal.Parse(csv[2], NumberStyles.Any, CultureInfo.InvariantCulture),
+                Amount = int.Parse(csv[5]),
                 AmountValue = amountValue,
-                Percentage = decimal.Parse(csv[4], NumberStyles.Any, CultureInfo.InvariantCulture),
-                MinimumPrice = decimal.Parse(csv[5], NumberStyles.Any, CultureInfo.InvariantCulture),
-                MaximumPrice = decimal.Parse(csv[6], NumberStyles.Any, CultureInfo.InvariantCulture),
-                USDMarketCap = decimal.Parse(csv[7], NumberStyles.Any, CultureInfo.InvariantCulture)
+                Percentage = decimal.Parse(csv[7], NumberStyles.Any, CultureInfo.InvariantCulture)
             };
         }
     }

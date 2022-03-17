@@ -254,13 +254,13 @@ namespace QuantConnect.DataProcessing
         internal void ProcessUniverse(string sid, string ticker, SmartInsiderIntention data)
         {
             var date = $"{data.AnnouncementDate:yyyyMMdd}";
+            var cap = data.USDMarketCap;
+            var minPrice = data.MinimumPrice;
+            var maxPrice = data.MaximumPrice;
             var amount = data.Amount;
             var amountValue = data.AmountValue;
             var percent = data.Percentage;
-            var minPrice = data.MinimumPrice;
-            var maxPrice = data.MaximumPrice;
-            var cap = data.USDMarketCap;
-            var dataInstance = $@"{amount},{amountValue},{percent},{minPrice},{maxPrice},{cap}";
+            var dataInstance = $@"{cap},{minPrice},{maxPrice},{amount},{amountValue},{percent}";
 
             Dictionary<string, string> dataDict;
             if (!_intentionUniverse.TryGetValue(date, out dataDict))
@@ -279,17 +279,17 @@ namespace QuantConnect.DataProcessing
                 var oldValue = dataDict[sid].Split(",");
 
                 // Consolidate same day, same ticker value
-                var newAmount = int.Parse(oldValue[0]) + amount;
-                var newAmountValue = long.Parse(oldValue[1]) + amountValue;
-                var newPercent = decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture) + percent;
                 var newMinPrice = Math.Min(
                     decimal.Parse(oldValue[3], NumberStyles.Any, CultureInfo.InvariantCulture),
                     minPrice);
                 var newMaxPrice = Math.Max(
                     decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture),
                     maxPrice);
-
-                dataDict[sid] = $"{newAmount},{newAmountValue},{newPercent},{newMinPrice},{newMaxPrice},{cap}"
+                var newAmount = int.Parse(oldValue[0]) + amount;
+                var newAmountValue = long.Parse(oldValue[1]) + amountValue;
+                var newPercent = decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture) + percent;
+                
+                dataDict[sid] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newAmountValue},{newPercent}"
             }
         }
         
@@ -303,13 +303,13 @@ namespace QuantConnect.DataProcessing
         internal void ProcessUniverse(string sid, string ticker, SmartInsiderTransaction data)
         {
             var date = $"{data.BuybackDate:yyyyMMdd}";
-            var amount = data.Amount;
+            var cap = data.USDMarketCap;
             var price = data.ExecutionPrice;
+            var amount = data.Amount;
             var usdValue = data.USDValue;
             var buybackPercentage = data.BuybackPercentage;
             var volumePercentage = data.VolumePercentage;
-            var cap = data.USDMarketCap;
-            var dataInstance = $@"{amount},{price},{price},{usdValue},{buybackPercentage},{volumePercentage},{cap}";
+            var dataInstance = $@"{cap},{price},{price},{amount},{usdValue},{buybackPercentage},{volumePercentage}";
 
             Dictionary<string, string> dataDict;
             if (!_transactionUniverse.TryGetValue(date, out dataDict))
@@ -328,18 +328,18 @@ namespace QuantConnect.DataProcessing
                 var oldValue = dataDict[sid].Split(",");
 
                 // Consolidate same day, same ticker value
-                var newAmount = int.Parse(oldValue[0]) + amount;
                 var newMinPrice = Math.Min(
                     decimal.Parse(oldValue[1], NumberStyles.Any, CultureInfo.InvariantCulture),
                     price);
                 var newMaxPrice = Math.Max(
                     decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture),
                     price);
+                var newAmount = int.Parse(oldValue[0]) + amount;
                 var newValue = long.Parse(oldValue[3]) + usdValue;
                 var newBuybackPercentage = decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture) + buybackPercentage;
                 var newVolumePercentage = decimal.Parse(oldValue[5], NumberStyles.Any, CultureInfo.InvariantCulture) + volumePercentage;
 
-                dataDict[sid] = $"{newAmount},{newMinPrice},{newMaxPrice},{newValue},{newBuybackPercentage},{newVolumePercentage},{cap}"
+                dataDict[sid] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newValue},{newBuybackPercentage},{newVolumePercentage}"
             }
         }
         
