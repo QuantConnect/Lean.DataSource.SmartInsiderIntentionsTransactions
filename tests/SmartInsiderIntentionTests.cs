@@ -104,7 +104,7 @@ namespace QuantConnect.DataLibrary.Tests
                 ICBIndustry = "Rare Metals",
                 ICBSuperSector = "Materials",
                 ICBSector = "Mining",
-                        ICBSubSector = "Gold",
+                ICBSubSector = "Gold",
                 ICBCode = null,
                 CompanyName = "ABCDEFGHIJKLMNOP",
                 PreviousResultsAnnouncementDate = null,
