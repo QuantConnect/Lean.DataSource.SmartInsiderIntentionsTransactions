@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             // add a custom universe data source (defaults to usa-equity)
-            AddUniverse<SmartInsiderIntentionsUniverse>("SmartInsiderIntentionsUniverse", Resolution.Daily, data =>
+            AddUniverse<SmartInsiderIntentionUniverse>("SmartInsiderIntentionUniverse", Resolution.Daily, data =>
             {
                 foreach (var datum in data)
                 {

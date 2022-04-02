@@ -49,7 +49,7 @@ namespace QuantConnect.DataLibrary.Tests
             var datum = CreateNewSelection();
 
             var expected = from d in datum
-                            where d.TotalTransactions > 1500
+                            where d.USDMarketCap > 500m
                             select d.Symbol;
             var result = new List<Symbol> {Symbol.Create("MATICUSD", SecurityType.Crypto, Market.GDAX)};
 

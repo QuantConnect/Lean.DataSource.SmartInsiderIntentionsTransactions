@@ -23,7 +23,7 @@ class SmartInsiderIntentionUniverseAlgorithm(QCAlgorithm):
         self.SetCash(100000)
 
         # add a custom universe data source (defaults to usa-equity)
-        self.AddUniverse(SmartInsiderIntentionsUniverse, "SmartInsiderIntentionsUniverse", Resolution.Daily, self.UniverseSelection)
+        self.AddUniverse(SmartInsiderIntentionUniverse, "SmartInsiderIntentionUniverse", Resolution.Daily, self.UniverseSelection)
         
     def UniverseSelection(self, data):
         for datum in data:
