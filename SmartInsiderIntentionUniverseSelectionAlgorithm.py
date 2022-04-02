@@ -17,7 +17,7 @@ class SmartInsiderIntentionUniverseAlgorithm(QCAlgorithm):
     def Initialize(self):
         # Data ADDED via universe selection is added with Daily resolution.
         self.UniverseSettings.Resolution = Resolution.Daily
-        
+
         self.SetStartDate(2022, 2, 14)
         self.SetEndDate(2022, 2, 18)
         self.SetCash(100000)
@@ -28,11 +28,11 @@ class SmartInsiderIntentionUniverseAlgorithm(QCAlgorithm):
     def UniverseSelection(self, data):
         for datum in data:
             self.Log(f"{datum.Symbol},{datum.Amount},{datum.AmountValue},{datum.Percentage},{datum.MinimumPrice},{datum.MaximumPrice},{datum.USDMarketCap}")
-        
+
         # define our selection criteria
         return [d.Symbol for d in data \
                     if d.Percentage > 0.005 \
                     and d.USDMarketCap > 100000000]
-    
+
     def OnSecuritiesChanged(self, changes):
         self.Log(changes.ToString())

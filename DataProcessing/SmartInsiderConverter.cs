@@ -288,11 +288,11 @@ namespace QuantConnect.DataProcessing
                 var newAmount = int.Parse(oldValue[0]) + amount;
                 var newAmountValue = long.Parse(oldValue[1]) + amountValue;
                 var newPercent = decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture) + percent;
-                
-                dataDict[sid] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newAmountValue},{newPercent}"
+
+                dataDict[sid] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newAmountValue},{newPercent}";
             }
         }
-        
+
         /// <summary>
         /// Processes the data to universe
         /// </summary>
@@ -339,10 +339,10 @@ namespace QuantConnect.DataProcessing
                 var newBuybackPercentage = decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture) + buybackPercentage;
                 var newVolumePercentage = decimal.Parse(oldValue[5], NumberStyles.Any, CultureInfo.InvariantCulture) + volumePercentage;
 
-                dataDict[sid] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newValue},{newBuybackPercentage},{newVolumePercentage}"
+                dataDict[sid] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newValue},{newBuybackPercentage},{newVolumePercentage}";
             }
         }
-        
+
         /// <summary>
         /// Writes to a temp file and moves the content to the final directory
         /// </summary>
@@ -418,7 +418,7 @@ namespace QuantConnect.DataProcessing
                 File.WriteAllLines(finalFile.FullName, csvContents);
             }
         }
-        
+
         /// <summary>
         /// Resolves type parameter to corresponding <see cref="SmartInsiderEvent"/> derived class
         /// </summary>

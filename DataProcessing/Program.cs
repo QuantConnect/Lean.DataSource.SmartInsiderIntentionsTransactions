@@ -40,7 +40,7 @@ namespace QuantConnect.DataProcessing
             var processedDataDirectory = new DirectoryInfo(Config.Get("processed-data-directory", Globals.DataFolder));
             var processingDateValue = Environment.GetEnvironmentVariable("QC_DATAFLEET_DEPLOYMENT_DATE");
             var processingDate = Parse.DateTimeExact(processingDateValue, "yyyyMMdd");
-            
+
             SmartInsiderConverter instance = null;
             try
             {
@@ -75,7 +75,7 @@ namespace QuantConnect.DataProcessing
                 // Run cleanup of the downloader/converter once it has finished or crashed.
                 instance.DisposeSafely();
             }
-            
+
             // The downloader/converter was successful
             Environment.Exit(0);
         }

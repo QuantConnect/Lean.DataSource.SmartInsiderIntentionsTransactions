@@ -56,7 +56,7 @@ namespace QuantConnect.DataSource
         /// Percentage of the volume traded on the day of the buyback.
         /// </summary>
         public decimal? VolumePercentage { get; set; }
-        
+
         /// <summary>
         /// Market Capitalization in USD
         /// </summary>
