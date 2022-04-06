@@ -27,6 +27,8 @@ namespace QuantConnect.DataSource
     /// </summary>
     public class SmartInsiderTransactionUniverse : BaseData
     {
+        private TimeSpan _period = TimeSpan.FromDays(1);
+        
         /// <summary>
         /// Number of shares traded
         /// </summary>
@@ -63,14 +65,9 @@ namespace QuantConnect.DataSource
         public decimal? USDMarketCap { get; set; }
 
         /// <summary>
-        /// Time passed between the date of the data and the time the data became available to us
-        /// </summary>
-        public TimeSpan Period { get; set; } = TimeSpan.FromDays(1);
-
-        /// <summary>
         /// Time the data became available
         /// </summary>
-        public override DateTime EndTime => Time + Period;
+        public override DateTime EndTime => Time + _period;
 
         /// <summary>
         /// Specifies the location of the data and directs LEAN where to load the data from
@@ -88,7 +85,7 @@ namespace QuantConnect.DataSource
                     "smartinsider",
                     "transactions",
                     "universe",
-                    $"{date:yyyyMMdd}.tsv"
+                    $"{date:yyyyMMdd}.csv"
                 ),
                 SubscriptionTransportMedium.LocalFile
             );
@@ -105,21 +102,21 @@ namespace QuantConnect.DataSource
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             var csv = line.Split(',');
-            var usdValue = long.Parse(csv[6]);
+            var usdValue = csv[6].IfNotNullOrEmpty<decimal?>(x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture));
             
             return new SmartInsiderTransactionUniverse
             {
                 Symbol = new Symbol(SecurityIdentifier.Parse(csv[0]), csv[1]),
-                Time = date - Period,
+                Time = date - _period,
                 Value = usdValue,
 
-                USDMarketCap = decimal.Parse(csv[2], NumberStyles.Any, CultureInfo.InvariantCulture),
-                MinimumExecutionPrice = decimal.Parse(csv[3], NumberStyles.Any, CultureInfo.InvariantCulture),
-                MaximumExecutionPrice = decimal.Parse(csv[4], NumberStyles.Any, CultureInfo.InvariantCulture),
-                Amount = int.Parse(csv[5]),
+                USDMarketCap = csv[2].IfNotNullOrEmpty<decimal?>(x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)),
+                MinimumExecutionPrice = csv[3].IfNotNullOrEmpty<decimal?>(x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)),
+                MaximumExecutionPrice = csv[4].IfNotNullOrEmpty<decimal?>(x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)),
+                Amount = csv[5].IfNotNullOrEmpty<decimal?>(x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)),
                 USDValue = usdValue,
-                BuybackPercentage = decimal.Parse(csv[7], NumberStyles.Any, CultureInfo.InvariantCulture),
-                VolumePercentage = decimal.Parse(csv[8], NumberStyles.Any, CultureInfo.InvariantCulture),
+                BuybackPercentage = csv[7].IfNotNullOrEmpty<decimal?>(x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)),
+                VolumePercentage = csv[8].IfNotNullOrEmpty<decimal?>(x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)),
             };
         }
     }
