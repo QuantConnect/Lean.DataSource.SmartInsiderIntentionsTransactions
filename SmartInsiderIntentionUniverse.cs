@@ -113,5 +113,13 @@ namespace QuantConnect.DataSource
                 Percentage = csv[7].IfNotNullOrEmpty<decimal?>(x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture))
             };
         }
+
+        /// <summary>
+        /// Converts the instance to string
+        /// </summary>
+        public override string ToString()
+        {
+            return $"{Symbol},{Amount},{AmountValue},{Percentage},{MinimumPrice},{MaximumPrice},{USDMarketCap}";
+        }
     }
 }

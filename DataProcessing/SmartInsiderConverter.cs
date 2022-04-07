@@ -248,10 +248,8 @@ namespace QuantConnect.DataProcessing
         /// Processes the data to universe
         /// </summary>
         /// <param name="sid">security ID string</param>
-        /// <param name="ticker">ticker string</param>
         /// <param name="data">Base class data</param>
-        /// <returns>Dictionary keyed by date yyyyMMdd that contains all the universe attribute</returns>
-        internal void ProcessUniverse(string sid, string ticker, SmartInsiderIntention data)
+        internal void ProcessUniverse(string sid, SmartInsiderIntention data)
         {
             var date = $"{data.AnnouncementDate:yyyyMMdd}";
             var cap = data.USDMarketCap;
@@ -269,7 +267,6 @@ namespace QuantConnect.DataProcessing
                 _intentionUniverse[date] = dataDict;
             }
 
-            string line;
             if (!dataDict.ContainsKey(sid))
             {
                 dataDict.Add(sid, dataInstance);
@@ -297,10 +294,8 @@ namespace QuantConnect.DataProcessing
         /// Processes the data to universe
         /// </summary>
         /// <param name="sid">security ID string</param>
-        /// <param name="ticker">ticker string</param>
         /// <param name="data">Base class data</param>
-        /// <returns>Dictionary keyed by date yyyyMMdd that contains all the universe attribute</returns>
-        internal void ProcessUniverse(string sid, string ticker, SmartInsiderTransaction data)
+        internal void ProcessUniverse(string sid, SmartInsiderTransaction data)
         {
             var date = $"{data.BuybackDate:yyyyMMdd}";
             var cap = data.USDMarketCap;
@@ -389,34 +384,28 @@ namespace QuantConnect.DataProcessing
         /// <param name="contents">Contents to write to file</param>
         private void WriteUniverseFile(DirectoryInfo destinationDirectory, Dictionary<string, Dictionary<string, string>> contents)
         {
-            foreach (var kvp in contents)
+            Parallel.ForEach(contents, kvp =>
             {
                 var date = kvp.Key;
 
-                var finalFile = new FileInfo(Path.Combine(destinationDirectory.FullName, "universe", $"{date}.csv"));
-                var processedFile = new FileInfo(Path.Combine(_processedDirectory.FullName, destinationDirectory.Name, "universe", $"{date}.csv"));
-                var fileContents = new List<T>();
+                var finalPath = Path.Combine(destinationDirectory.FullName, "universe", $"{kvp.Key}.csv");
+                var finalFileExists = File.Exists(finalPath);
 
-                if (processedFile.Exists)
+                var lines = new HashSet<string>(kvp.Value.Select(kv => $"{kv.Key},{kv.Value}"));
+                if (finalFileExists)
                 {
-                    Log.Trace($"SmartInsiderConverter.WriteToFile(): Writing from existing processed contents to file: {finalFile.FullName}");
-                    fileContents = File.ReadAllLines(processedFile.FullName).ToList();
+                    foreach (var line in File.ReadAllLines(finalPath))
+                    {
+                        lines.Add(line);
+                    }
                 }
-                else
-                {
-                    Log.Trace($"SmartInsiderConverter.WriteToFile(): Writing to new file: {finalFile.FullName}");
-                }
+                var finalLines = lines.OrderBy(x => x.Split(',').First()).ToList();
 
-                var line = kvp.Value.Select(kv => $"{kv.Key},{kv.Value}").ToList();
-                fileContents.AddRange(line);
-
-                var csvContents = fileContents
-                    .OrderBy(x => x.Split(",").First())
-                    .Select(x => x.ToLine())
-                    .Distinct();
-
-                File.WriteAllLines(finalFile.FullName, csvContents);
-            }
+                var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
+                File.WriteAllLines(tempPath, finalLines);
+                var tempFilePath = new FileInfo(tempPath);
+                tempFilePath.MoveTo(finalPath, true);
+            });
         }
 
         /// <summary>
