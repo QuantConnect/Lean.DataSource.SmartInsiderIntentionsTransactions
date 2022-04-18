@@ -31,7 +31,7 @@ namespace QuantConnect.DataProcessing
         /// Entrypoint of the program
         /// </summary>
         /// <returns>Exit code. 0 equals successful, and any other value indicates the downloader/converter failed.</returns>
-        public static int Main()
+        public static void Main()
         {
             // Get the config values first before running. These values are set for us
             // automatically to the value set on the website when defining this data type

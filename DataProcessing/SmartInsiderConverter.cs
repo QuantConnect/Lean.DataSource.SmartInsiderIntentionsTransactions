@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using QuantConnect;
 using QuantConnect.DataSource;
 using QuantConnect.Logging;
@@ -25,6 +26,7 @@ using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.DataProcessing
 {
@@ -53,8 +55,9 @@ namespace QuantConnect.DataProcessing
             _destinationDirectory = Directory.CreateDirectory(Path.Combine(destinationDataDirectory.FullName, "alternative", VendorName));
             _processedDirectory = new DirectoryInfo(Path.Combine(processedDataDirectory.FullName, "alternative", VendorName));
 
-            _mapFileResolver = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))
-                .Get(Market.USA);
+            var mapFileProvider = new LocalZipMapFileProvider();
+            mapFileProvider.Initialize(new DefaultDataProvider());
+            _mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.EquityUsa);
 
             Directory.CreateDirectory(Path.Combine(_destinationDirectory.FullName, "intentions", "universe"));
             Directory.CreateDirectory(Path.Combine(_destinationDirectory.FullName, "transactions", "universe"));
@@ -226,7 +229,7 @@ namespace QuantConnect.DataProcessing
                 }
 
                 var sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, newTicker, Market.USA);
-                ProcessUniverse(sid.ToString(), newTicker.ToString(), dataInstance);
+                ProcessUniverse(sid.ToString(), dataInstance);
 
                 List<T> symbolLines;
                 if (!lines.TryGetValue(newTicker, out symbolLines))
@@ -249,7 +252,27 @@ namespace QuantConnect.DataProcessing
         /// </summary>
         /// <param name="sid">security ID string</param>
         /// <param name="data">Base class data</param>
-        internal void ProcessUniverse(string sid, SmartInsiderIntention data)
+        private void ProcessUniverse<T>(string sid, T data)
+            where T : SmartInsiderEvent
+        {
+            if (typeof(T) == typeof(SmartInsiderIntention))
+            {
+                var intention = data as SmartInsiderIntention;
+                ProcessUniverse(sid, intention);
+            }
+            else if (typeof(T) == typeof(SmartInsiderTransaction))
+            {
+                var transaction = data as SmartInsiderTransaction;
+                ProcessUniverse(sid, transaction);
+            }
+        }
+
+        /// <summary>
+        /// Processes the data to universe
+        /// </summary>
+        /// <param name="sid">security ID string</param>
+        /// <param name="data">Base class data</param>
+        private void ProcessUniverse(string sid, SmartInsiderIntention data)
         {
             var date = $"{data.AnnouncementDate:yyyyMMdd}";
             var cap = data.USDMarketCap;
@@ -276,12 +299,10 @@ namespace QuantConnect.DataProcessing
                 var oldValue = dataDict[sid].Split(",");
 
                 // Consolidate same day, same ticker value
-                var newMinPrice = Math.Min(
-                    decimal.Parse(oldValue[3], NumberStyles.Any, CultureInfo.InvariantCulture),
-                    minPrice);
-                var newMaxPrice = Math.Max(
-                    decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture),
-                    maxPrice);
+                var newMin = decimal.Parse(oldValue[3], NumberStyles.Any, CultureInfo.InvariantCulture);
+                var newMinPrice = newMin < minPrice ? newMin : minPrice;
+                var newMax = decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture);
+                var newMaxPrice = newMax > maxPrice ? newMax : maxPrice;
                 var newAmount = int.Parse(oldValue[0]) + amount;
                 var newAmountValue = long.Parse(oldValue[1]) + amountValue;
                 var newPercent = decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture) + percent;
@@ -295,7 +316,7 @@ namespace QuantConnect.DataProcessing
         /// </summary>
         /// <param name="sid">security ID string</param>
         /// <param name="data">Base class data</param>
-        internal void ProcessUniverse(string sid, SmartInsiderTransaction data)
+        private void ProcessUniverse(string sid, SmartInsiderTransaction data)
         {
             var date = $"{data.BuybackDate:yyyyMMdd}";
             var cap = data.USDMarketCap;
@@ -313,7 +334,6 @@ namespace QuantConnect.DataProcessing
                 _transactionUniverse[date] = dataDict;
             }
 
-            string line;
             if (!dataDict.ContainsKey(sid))
             {
                 dataDict.Add(sid, dataInstance);
@@ -323,12 +343,10 @@ namespace QuantConnect.DataProcessing
                 var oldValue = dataDict[sid].Split(",");
 
                 // Consolidate same day, same ticker value
-                var newMinPrice = Math.Min(
-                    decimal.Parse(oldValue[1], NumberStyles.Any, CultureInfo.InvariantCulture),
-                    price);
-                var newMaxPrice = Math.Max(
-                    decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture),
-                    price);
+                var newMin = decimal.Parse(oldValue[1], NumberStyles.Any, CultureInfo.InvariantCulture);
+                var newMinPrice = newMin < price ? newMin : price;
+                var newMax = decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture);
+                var newMaxPrice = newMax > price ? newMax : price;
                 var newAmount = int.Parse(oldValue[0]) + amount;
                 var newValue = long.Parse(oldValue[3]) + usdValue;
                 var newBuybackPercentage = decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture) + buybackPercentage;

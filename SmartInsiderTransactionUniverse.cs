@@ -108,7 +108,7 @@ namespace QuantConnect.DataSource
             {
                 Symbol = new Symbol(SecurityIdentifier.Parse(csv[0]), csv[1]),
                 Time = date - _period,
-                Value = usdValue,
+                Value = Convert.ToDecimal(usdValue),
 
                 USDMarketCap = csv[2].IfNotNullOrEmpty<decimal?>(x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)),
                 MinimumExecutionPrice = csv[3].IfNotNullOrEmpty<decimal?>(x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)),
