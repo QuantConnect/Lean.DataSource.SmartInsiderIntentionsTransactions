@@ -18,17 +18,21 @@
     <Compile Remove="tests\**" />
     <EmbeddedResource Remove="tests\**" />
     <None Remove="tests\**" />
+    <Compile Remove="DataProcessing\**" />
+    <EmbeddedResource Remove="DataProcessing\**" />
+    <None Remove="DataProcessing\**" />
     <Compile Remove="Demonstration.cs" />
     <None Remove=".gitignore" />
     <Compile Remove="SmartInsiderDataAlgorithm.cs" />
     <Compile Remove="SmartInsiderEventBenchmarkAlgorithm.cs" />
+    <Compile Remove="SmartInsiderIntentionUniverseSelectionAlgorithm.cs" />
     <Compile Remove="SmartInsiderTransactionAlgorithm.cs" />
+    <Compile Remove="SmartInsiderTransactionUniverseSelectionAlgorithm.cs" />
     <None Remove="SmartInsiderDataAlgorithm.py" />
     <None Remove="SmartInsiderEventBenchmarkAlgorithm.py" />
+    <None Remove="SmartInsiderIntentionUniverseSelectionAlgorithm.py" />
     <None Remove="SmartInsiderTransactionAlgorithm.py" />
-    <None Remove="process.sample.ipynb" />
-    <None Remove="process.sample.py" />
-    <None Remove="process.sample.sh" />
+    <None Remove="SmartInsiderTransactionUniverseSelectionAlgorithm.py" />
   </ItemGroup>
 
 </Project>

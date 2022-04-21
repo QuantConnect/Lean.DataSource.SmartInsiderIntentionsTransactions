@@ -14,15 +14,19 @@
 */
 
 using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using QuantConnect;
 using QuantConnect.DataSource;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
-using System.Collections.Generic;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.DataProcessing
 {
@@ -36,6 +40,9 @@ namespace QuantConnect.DataProcessing
 
         private readonly MapFileResolver _mapFileResolver;
 
+        private Dictionary<string, Dictionary<string, string>> _intentionUniverse = new();
+        private Dictionary<string, Dictionary<string, string>> _transactionUniverse = new();
+
         /// <summary>
         /// Creates an instance of the converter
         /// </summary>
@@ -48,11 +55,12 @@ namespace QuantConnect.DataProcessing
             _destinationDirectory = Directory.CreateDirectory(Path.Combine(destinationDataDirectory.FullName, "alternative", VendorName));
             _processedDirectory = new DirectoryInfo(Path.Combine(processedDataDirectory.FullName, "alternative", VendorName));
 
-            _mapFileResolver = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))
-                .Get(Market.USA);
+            var mapFileProvider = new LocalZipMapFileProvider();
+            mapFileProvider.Initialize(new DefaultDataProvider());
+            _mapFileResolver = mapFileProvider.Get(AuxiliaryDataKey.EquityUsa);
 
-            Directory.CreateDirectory(Path.Combine(_destinationDirectory.FullName, "intentions"));
-            Directory.CreateDirectory(Path.Combine(_destinationDirectory.FullName, "transactions"));
+            Directory.CreateDirectory(Path.Combine(_destinationDirectory.FullName, "intentions", "universe"));
+            Directory.CreateDirectory(Path.Combine(_destinationDirectory.FullName, "transactions", "universe"));
         }
 
         /// <summary>
@@ -102,6 +110,16 @@ namespace QuantConnect.DataProcessing
                 else
                 {
                     Log.Error($"SmartInsiderConverter.Convert(): Raw transactions file does not exist: {rawTransactionsFile.FullName}");
+                }
+
+                if (_intentionUniverse.Count > 0)
+                {
+                    WriteUniverseFile(intentionsDirectory, _intentionUniverse);
+                }
+
+                if (_transactionUniverse.Count > 0)
+                {
+                    WriteUniverseFile(transactionsDirectory, _transactionUniverse);
                 }
             }
             catch (Exception e)
@@ -210,6 +228,9 @@ namespace QuantConnect.DataProcessing
                     Log.Trace($"SmartInsiderConverter.Process(): Mapped ticker from {ticker} to {newTicker}");
                 }
 
+                var sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, newTicker, Market.USA);
+                ProcessUniverse(sid.ToString(), dataInstance);
+
                 List<T> symbolLines;
                 if (!lines.TryGetValue(newTicker, out symbolLines))
                 {
@@ -224,6 +245,115 @@ namespace QuantConnect.DataProcessing
             }
 
             return lines;
+        }
+
+        /// <summary>
+        /// Processes the data to universe
+        /// </summary>
+        /// <param name="sid">security ID string</param>
+        /// <param name="data">Base class data</param>
+        private void ProcessUniverse<T>(string sid, T data)
+            where T : SmartInsiderEvent
+        {
+            if (typeof(T) == typeof(SmartInsiderIntention))
+            {
+                var intention = data as SmartInsiderIntention;
+                ProcessUniverse(sid, intention);
+            }
+            else if (typeof(T) == typeof(SmartInsiderTransaction))
+            {
+                var transaction = data as SmartInsiderTransaction;
+                ProcessUniverse(sid, transaction);
+            }
+        }
+
+        /// <summary>
+        /// Processes the data to universe
+        /// </summary>
+        /// <param name="sid">security ID string</param>
+        /// <param name="data">Base class data</param>
+        private void ProcessUniverse(string sid, SmartInsiderIntention data)
+        {
+            var date = $"{data.AnnouncementDate:yyyyMMdd}";
+            var cap = data.USDMarketCap;
+            var minPrice = data.MinimumPrice;
+            var maxPrice = data.MaximumPrice;
+            var amount = data.Amount;
+            var amountValue = data.AmountValue;
+            var percent = data.Percentage;
+            var dataInstance = $@"{cap},{minPrice},{maxPrice},{amount},{amountValue},{percent}";
+
+            Dictionary<string, string> dataDict;
+            if (!_intentionUniverse.TryGetValue(date, out dataDict))
+            {
+                dataDict = new Dictionary<string, string>();
+                _intentionUniverse[date] = dataDict;
+            }
+
+            if (!dataDict.ContainsKey(sid))
+            {
+                dataDict.Add(sid, dataInstance);
+            }
+            else
+            {
+                var oldValue = dataDict[sid].Split(",");
+
+                // Consolidate same day, same ticker value
+                var newMin = decimal.Parse(oldValue[3], NumberStyles.Any, CultureInfo.InvariantCulture);
+                var newMinPrice = newMin < minPrice ? newMin : minPrice;
+                var newMax = decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture);
+                var newMaxPrice = newMax > maxPrice ? newMax : maxPrice;
+                var newAmount = int.Parse(oldValue[0]) + amount;
+                var newAmountValue = long.Parse(oldValue[1]) + amountValue;
+                var newPercent = decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture) + percent;
+
+                dataDict[sid] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newAmountValue},{newPercent}";
+            }
+        }
+
+        /// <summary>
+        /// Processes the data to universe
+        /// </summary>
+        /// <param name="sid">security ID string</param>
+        /// <param name="data">Base class data</param>
+        private void ProcessUniverse(string sid, SmartInsiderTransaction data)
+        {
+            var date = $"{data.BuybackDate:yyyyMMdd}";
+            var cap = data.USDMarketCap;
+            var price = data.ExecutionPrice;
+            var amount = data.Amount;
+            var usdValue = data.USDValue;
+            var buybackPercentage = data.BuybackPercentage;
+            var volumePercentage = data.VolumePercentage;
+            var dataInstance = $@"{cap},{price},{price},{amount},{usdValue},{buybackPercentage},{volumePercentage}";
+
+            Dictionary<string, string> dataDict;
+            if (!_transactionUniverse.TryGetValue(date, out dataDict))
+            {
+                dataDict = new Dictionary<string, string>();
+                _transactionUniverse[date] = dataDict;
+            }
+
+            if (!dataDict.ContainsKey(sid))
+            {
+                dataDict.Add(sid, dataInstance);
+            }
+            else
+            {
+                var oldValue = dataDict[sid].Split(",");
+
+                // Consolidate same day, same ticker value
+                var newMin = decimal.Parse(oldValue[1], NumberStyles.Any, CultureInfo.InvariantCulture);
+                var newMinPrice = newMin < price ? newMin : price;
+                var newMax = decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture);
+                var newMaxPrice = newMax > price ? newMax : price;
+                var newAmount = int.Parse(oldValue[0]) + amount;
+                var newValue = long.Parse(oldValue[3]) + usdValue;
+                var newBuybackPercentage = decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture) + buybackPercentage;
+                var newVolumePercentage = decimal.Parse(oldValue[5], NumberStyles.Any, CultureInfo.InvariantCulture) + volumePercentage;
+
+                dataDict[sid] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newValue},{newBuybackPercentage},{newVolumePercentage}";
+            }
         }
 
         /// <summary>
@@ -263,6 +393,37 @@ namespace QuantConnect.DataProcessing
 
                 File.WriteAllLines(finalFile.FullName, tsvContents);
             }
+        }
+
+        /// <summary>
+        /// Writes to a temp file and moves the content to the final universe directory
+        /// </summary>
+        /// <param name="destinationDirectory">Directory to write final file to</param>
+        /// <param name="contents">Contents to write to file</param>
+        private void WriteUniverseFile(DirectoryInfo destinationDirectory, Dictionary<string, Dictionary<string, string>> contents)
+        {
+            Parallel.ForEach(contents, kvp =>
+            {
+                var date = kvp.Key;
+
+                var finalPath = Path.Combine(destinationDirectory.FullName, "universe", $"{kvp.Key}.csv");
+                var finalFileExists = File.Exists(finalPath);
+
+                var lines = new HashSet<string>(kvp.Value.Select(kv => $"{kv.Key},{kv.Value}"));
+                if (finalFileExists)
+                {
+                    foreach (var line in File.ReadAllLines(finalPath))
+                    {
+                        lines.Add(line);
+                    }
+                }
+                var finalLines = lines.OrderBy(x => x.Split(',').First()).ToList();
+
+                var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
+                File.WriteAllLines(tempPath, finalLines);
+                var tempFilePath = new FileInfo(tempPath);
+                tempFilePath.MoveTo(finalPath, true);
+            });
         }
 
         /// <summary>
