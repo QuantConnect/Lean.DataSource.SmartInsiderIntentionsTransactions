@@ -19,12 +19,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using QuantConnect;
 using QuantConnect.DataSource;
 using QuantConnect.Logging;
-using QuantConnect.Util;
-using QuantConnect.Interfaces;
-using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds;
 
@@ -147,42 +143,29 @@ namespace QuantConnect.DataProcessing
 
             Log.Trace($"SmartInsiderConverter.Process(): Processing file: {sourceFile.FullName}");
 
-            foreach (var line in File.ReadLines(sourceFile.FullName))
+            Dictionary<string, int> indexes = null;
+            foreach (var rawLine in File.ReadLines(sourceFile.FullName))
             {
                 i++;
 
+                var line = rawLine.Replace("\"", "");
                 // First line is the header row, but make sure we don't encounter it anywhere else in the data
-                if (line.StartsWith("\"TransactionID"))
+                if (line.StartsWith("TransactionID"))
                 {
-                    Log.Trace($"SmartInsiderConverter.Process(): Header row on line {i}. Skipping...");
+                    var headers = line.Split('\t').ToList();
+                    indexes = headers.ToDictionary(s => s, s => headers.IndexOf(s), StringComparer.OrdinalIgnoreCase);
+
+                    Log.Trace($"SmartInsiderConverter.Process(): Header row on line {i}: [{string.Join(",", indexes.Select(kvp => $"{kvp.Key}@{kvp.Value}"))}]");
                     continue;
                 }
 
-                // Yes, there are ONE HUNDRED total fields in this dataset.
-                // However, we will only take the first 60 since the rest are reserved fields
-                var tsv = line.Split('\t')
-                    .Take(60)
-                    .Select(x => x.Replace("\"", ""))
-                    .ToList();
-
-                // If we have a null value on a non-nullable field, consider it invalid data and skip
-                if (string.IsNullOrWhiteSpace(tsv[2]))
+                if (indexes == null)
                 {
-                    Log.Trace($"SmartInsiderConverter.Process(): Null value encountered on non-nullable value on line {i}");
-                    continue;
+                    throw new ArgumentException("SmartInsiderConverter.Process(): Header row was not found!");
                 }
-
-                // Remove in descending order to maintain index order
-                // while we delete lower indexed values
-                tsv.RemoveAt(46); // ShowOriginal
-                tsv.RemoveAt(36); // PreviousClosePrice
-                tsv.RemoveAt(14); // ShortCompanyName
-                tsv.RemoveAt(7);  // CompanyPageURL
-
-                var finalLine = string.Join("\t", tsv);
 
                 var dataInstance = new T();
-                dataInstance.FromRawData(finalLine);
+                dataInstance.FromRawData(line, indexes);
 
                 var ticker = dataInstance.TickerSymbol;
 
