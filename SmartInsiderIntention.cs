@@ -13,12 +13,13 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
 using System;
-using System.Globalization;
 using System.IO;
+using Newtonsoft.Json;
 using QuantConnect.Data;
+using System.Globalization;
 using QuantConnect.Logging;
+using System.Collections.Generic;
 
 namespace QuantConnect.DataSource
 {
@@ -131,86 +132,47 @@ namespace QuantConnect.DataSource
         /// Constructs a new instance from unformatted TSV data
         /// </summary>
         /// <param name="line">Line of raw TSV (raw with fields 46, 36, 14, 7 removed in descending order)</param>
+        /// <param name="indexes">Index per header column</param>
         /// <returns>Instance of the object</returns>
-        public override void FromRawData(string line)
+        public override void FromRawData(string line, Dictionary<string, int> indexes)
         {
             var tsv = line.Split('\t');
-
-            TransactionID = string.IsNullOrWhiteSpace(tsv[0]) ? null : tsv[0];
-
-            EventType = SmartInsiderEventType.NotSpecified;
-            if (!string.IsNullOrWhiteSpace(tsv[1]))
-            {
-                try
-                {
-                    EventType = JsonConvert.DeserializeObject<SmartInsiderEventType>($"\"{tsv[1]}\"");
-                }
-                catch (JsonSerializationException)
-                {
-                    Log.Error($"SmartInsiderIntention.FromRawData(): New unexpected entry found {tsv[1]}. Parsed as NotSpecified.");
-                }
-            }
-
-            LastUpdate = DateTime.ParseExact(tsv[2], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            LastIDsUpdate = string.IsNullOrWhiteSpace(tsv[3]) ? (DateTime?)null : DateTime.ParseExact(tsv[3], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            ISIN = string.IsNullOrWhiteSpace(tsv[4]) ? null : tsv[4];
-            USDMarketCap = string.IsNullOrWhiteSpace(tsv[5]) ? (decimal?)null : Convert.ToDecimal(tsv[5], CultureInfo.InvariantCulture);
-            CompanyID = string.IsNullOrWhiteSpace(tsv[6]) ? (int?)null : Convert.ToInt32(tsv[6], CultureInfo.InvariantCulture);
-            ICBIndustry = string.IsNullOrWhiteSpace(tsv[7]) ? null : tsv[7];
-            ICBSuperSector = string.IsNullOrWhiteSpace(tsv[8]) ? null : tsv[8];
-            ICBSector = string.IsNullOrWhiteSpace(tsv[9]) ? null : tsv[9];
-            ICBSubSector = string.IsNullOrWhiteSpace(tsv[10]) ? null : tsv[10];
-            ICBCode = string.IsNullOrWhiteSpace(tsv[11]) ? (int?)null : Convert.ToInt32(tsv[11], CultureInfo.InvariantCulture);
-            CompanyName = string.IsNullOrWhiteSpace(tsv[12]) ? null : tsv[12];
-            PreviousResultsAnnouncementDate = string.IsNullOrWhiteSpace(tsv[13]) ? (DateTime?)null : DateTime.ParseExact(tsv[13], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            NextResultsAnnouncementsDate = string.IsNullOrWhiteSpace(tsv[14]) ? (DateTime?)null : DateTime.ParseExact(tsv[14], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            NextCloseBegin = string.IsNullOrWhiteSpace(tsv[15]) ? (DateTime?)null : DateTime.ParseExact(tsv[15], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            LastCloseEnded = string.IsNullOrWhiteSpace(tsv[16]) ? (DateTime?)null : DateTime.ParseExact(tsv[16], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            SecurityDescription = string.IsNullOrWhiteSpace(tsv[17]) ? null : tsv[17];
-            TickerCountry = string.IsNullOrWhiteSpace(tsv[18]) ? null : tsv[18];
-            TickerSymbol = string.IsNullOrWhiteSpace(tsv[19]) ? null : tsv[19];
-
-            AnnouncementDate = string.IsNullOrWhiteSpace(tsv[37]) ? (DateTime?)null : DateTime.ParseExact(tsv[37], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            TimeReleased = string.IsNullOrWhiteSpace(tsv[38]) ? (DateTime?)null : ParseDate(tsv[38]);
-            TimeProcessed = string.IsNullOrWhiteSpace(tsv[39]) ? (DateTime?)null : ParseDate(tsv[39]);
-            TimeReleasedUtc = string.IsNullOrWhiteSpace(tsv[40]) ? (DateTime?)null : ParseDate(tsv[40]);
-            TimeProcessedUtc = string.IsNullOrWhiteSpace(tsv[41]) ? (DateTime?)null : ParseDate(tsv[41]);
-            AnnouncedIn = string.IsNullOrWhiteSpace(tsv[42]) ? null : tsv[42];
+            base.FromRawData(line, indexes);
 
             Execution = null;
-            if (!string.IsNullOrWhiteSpace(tsv[43]))
+            if (!string.IsNullOrWhiteSpace(tsv[indexes["IntentionVia"]]))
             {
                 try
                 {
-                    Execution = JsonConvert.DeserializeObject<SmartInsiderExecution>($"\"{tsv[43]}\"");
+                    Execution = JsonConvert.DeserializeObject<SmartInsiderExecution>($"\"{tsv[indexes["IntentionVia"]]}\"");
                 }
                 catch (JsonSerializationException)
                 {
-                    Log.Error($"SmartInsiderIntention.FromRawData(): New unexpected entry found for Execution: {tsv[43]}. Parsed as Error.");
+                    Log.Error($"SmartInsiderIntention.FromRawData(): New unexpected entry found for Execution: {tsv[indexes["IntentionVia"]]}. Parsed as Error.");
                     Execution = SmartInsiderExecution.Error;
                 }
             }
 
             ExecutionEntity = null;
-            if (!string.IsNullOrWhiteSpace(tsv[44]))
+            if (!string.IsNullOrWhiteSpace(tsv[indexes["IntentionBy"]]))
             {
                 try
                 {
-                    ExecutionEntity = JsonConvert.DeserializeObject<SmartInsiderExecutionEntity>($"\"{tsv[44]}\"");
+                    ExecutionEntity = JsonConvert.DeserializeObject<SmartInsiderExecutionEntity>($"\"{tsv[indexes["IntentionBy"]]}\"");
                 }
                 catch (JsonSerializationException)
                 {
-                    Log.Error($"SmartInsiderIntention.FromRawData(): New unexpected entry found for ExecutionEntity: {tsv[44]}. Parsed as Error.");
+                    Log.Error($"SmartInsiderIntention.FromRawData(): New unexpected entry found for ExecutionEntity: {tsv[indexes["IntentionBy"]]}. Parsed as Error.");
                     ExecutionEntity = SmartInsiderExecutionEntity.Error;
                 }
             }
 
             ExecutionHolding = null;
-            if (!string.IsNullOrWhiteSpace(tsv[45]))
+            if (!string.IsNullOrWhiteSpace(tsv[indexes["BuybackIntentionHoldingType"]]))
             {
                 try
                 {
-                    ExecutionHolding = JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[45]}\"");
+                    ExecutionHolding = JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[indexes["BuybackIntentionHoldingType"]]}\"");
                     if (ExecutionHolding == SmartInsiderExecutionHolding.Error)
                     {
                         // This error in particular represents a SatisfyStockVesting field.
@@ -219,22 +181,22 @@ namespace QuantConnect.DataSource
                 }
                 catch (JsonSerializationException)
                 {
-                    Log.Error($"SmartInsiderIntention.FromRawData(): New unexpected entry found for ExecutionHolding: {tsv[45]}. Parsed as Error.");
+                    Log.Error($"SmartInsiderIntention.FromRawData(): New unexpected entry found for ExecutionHolding: {tsv[indexes["BuybackIntentionHoldingType"]]}. Parsed as Error.");
                     ExecutionHolding = SmartInsiderExecutionHolding.Error;
 
                 }
             }
 
-            Amount = string.IsNullOrWhiteSpace(tsv[46]) ? (int?)null : Convert.ToInt32(tsv[46], CultureInfo.InvariantCulture);
-            ValueCurrency = string.IsNullOrWhiteSpace(tsv[47]) ? null : tsv[47];
-            AmountValue = string.IsNullOrWhiteSpace(tsv[48]) ? (long?)null : Convert.ToInt64(tsv[48], CultureInfo.InvariantCulture);
-            Percentage = string.IsNullOrWhiteSpace(tsv[49]) ? (decimal?)null : Convert.ToDecimal(tsv[49], CultureInfo.InvariantCulture);
-            AuthorizationStartDate = string.IsNullOrWhiteSpace(tsv[50]) ? (DateTime?)null : DateTime.ParseExact(tsv[50], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            AuthorizationEndDate = string.IsNullOrWhiteSpace(tsv[51]) ? (DateTime?)null : DateTime.ParseExact(tsv[51], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            PriceCurrency = string.IsNullOrWhiteSpace(tsv[52]) ? null : tsv[52];
-            MinimumPrice = string.IsNullOrWhiteSpace(tsv[53]) ? (decimal?)null : Convert.ToDecimal(tsv[53], CultureInfo.InvariantCulture);
-            MaximumPrice = string.IsNullOrWhiteSpace(tsv[54]) ? (decimal?)null : Convert.ToDecimal(tsv[54], CultureInfo.InvariantCulture);
-            NoteText = tsv.Length == 56 ? (string.IsNullOrWhiteSpace(tsv[55]) ? null : tsv[55]) : null;
+            Amount = string.IsNullOrWhiteSpace(tsv[indexes["IntentionAmount"]]) ? null : Convert.ToInt32(tsv[indexes["IntentionAmount"]], CultureInfo.InvariantCulture);
+            ValueCurrency = string.IsNullOrWhiteSpace(tsv[indexes[nameof(ValueCurrency)]]) ? null : tsv[indexes[nameof(ValueCurrency)]];
+            AmountValue = string.IsNullOrWhiteSpace(tsv[indexes["IntentionValue"]]) ? null : Convert.ToInt64(tsv[indexes["IntentionValue"]], CultureInfo.InvariantCulture);
+            Percentage = string.IsNullOrWhiteSpace(tsv[indexes["IntentionPercentage"]]) ? null : Convert.ToDecimal(tsv[indexes["IntentionPercentage"]], CultureInfo.InvariantCulture);
+            AuthorizationStartDate = string.IsNullOrWhiteSpace(tsv[indexes["StartDate"]]) ? null : DateTime.ParseExact(tsv[indexes["StartDate"]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            AuthorizationEndDate = string.IsNullOrWhiteSpace(tsv[indexes["EndDate"]]) ? null : DateTime.ParseExact(tsv[indexes["EndDate"]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            PriceCurrency = string.IsNullOrWhiteSpace(tsv[indexes[nameof(PriceCurrency)]]) ? null : tsv[indexes[nameof(PriceCurrency)]];
+            MinimumPrice = string.IsNullOrWhiteSpace(tsv[indexes[nameof(MinimumPrice)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(MinimumPrice)]], CultureInfo.InvariantCulture);
+            MaximumPrice = string.IsNullOrWhiteSpace(tsv[indexes[nameof(MaximumPrice)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(MaximumPrice)]], CultureInfo.InvariantCulture);
+            NoteText = string.IsNullOrWhiteSpace(tsv[indexes["BuybackIntentionNoteText"]]) ? null : tsv[indexes["BuybackIntentionNoteText"]];
         }
 
         /// <summary>

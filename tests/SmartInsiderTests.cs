@@ -16,7 +16,7 @@
 using NUnit.Framework;
 using QuantConnect.DataSource;
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace QuantConnect.DataLibrary.Tests
@@ -185,29 +185,29 @@ namespace QuantConnect.DataLibrary.Tests
                                        "\"\"\t\"\"\t\"\"\t\"\"\t\"Com\"\t\"US\"\t\"SCC\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\t\t-999\t\"Some unexpected event.\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"\"\t\"" +
                                        "\"\t2020-07-27\t\"\"\t\"\"\t\"\"\t2020-07-27  13:57:37\t\"US\"\t\"https://smartinsiderdatapage.com\"\t\"UnexpectedEvent\"\t\"UnexpectedIssuer\"\t\"UnexpectedReported\"\t\"\"\t\"\"\t\t" +
                                        "\"\"\t\t\t\"\"\t\t\t\"\"";
-
-            var tsv = realRawIntentionLine.Split('\t')
-                .Take(60)
-                .Select(x => x.Replace("\"", ""))
-                .ToList();
-
-            // Remove in descending order to maintain index order
-            // while we delete lower indexed values
-            tsv.RemoveAt(46); // ShowOriginal
-            tsv.RemoveAt(36); // PreviousClosePrice
-            tsv.RemoveAt(14); // ShortCompanyName
-            tsv.RemoveAt(7);  // CompanyPageURL
-
-            var filteredRawIntentionLine = string.Join("\t", tsv);
+            var line = realRawIntentionLine.Replace("\"", "");
 
             var intention = new SmartInsiderIntention();
-            Assert.DoesNotThrow(() => intention.FromRawData(filteredRawIntentionLine));
+            var indexes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "TransactionID", 0 },{ "BuybackType", 1 },{ "LastUpdate", 2 },{ "LastIDsUpdate", 3 },{ "ISIN", 4 },{ "USDMarketCap", 5 },{ "CompanyID", 6 },{ "companyPageURL", 7 },
+                { "ICBIndustry", 8 },{ "ICBSuperSector", 9 },{ "ICBSector", 10 },{ "ICBSubSector", 11 },{ "ICBCode", 12 },{ "CompanyName", 13 },{ "ShortCompanyName", 14 },
+                { "previousResultsAnnsDate", 15 },{ "nextResultsAnnsDate", 16 },{ "nextCloseBegin", 17 },{ "LastCloseEnded", 18 },{ "SecurityDescription", 19 },{ "TickerCountry", 20 },
+                { "TickerSymbol", 21 },{ "BuybackDate", 22 },{ "BybackVia", 23 },{ "BybackBy", 24 },{ "HoldingType", 25 },{ "Currency", 26 },{ "Price", 27 },{ "TransactionAmount", 28 },
+                { "GBPValue", 29 },{ "EURValue", 30 },{ "USDValue", 31 },{ "NoteText", 32 },{ "BuybackPercentage", 33 },{ "VolumePercentage", 34 },{ "ConvRate", 35 },
+                { "previousClosePrice", 36 },{ "AmountAdjFactor", 37 },{ "PriceAdjFactor", 38 },{ "TreasuryHolding", 39 },{ "AnnouncementDate", 40 },{ "TimeReleased", 41 },
+                { "TimeProcessed", 42 },{ "TimeReleasedGMT", 43 },{ "TimeProcessedGMT", 44 },{ "AnnouncedIn", 45 },{ "showOriginal", 46 },{ "IntentionVia", 47 },{ "IntentionBy", 48 },
+                { "BuybackIntentionHoldingType", 49 },{ "IntentionAmount", 50 },{ "ValueCurrency", 51 },{ "IntentionValue", 52 },{ "IntentionPercentage", 53 },{ "StartDate", 54 },
+                { "EndDate", 55 },{ "PriceCurrency", 56 },{ "MinimumPrice", 57 },{ "MaximumPrice", 58 },{ "BuybackIntentionNoteText", 59 }
+            };
+            Assert.DoesNotThrow(() => intention.FromRawData(line, indexes));
 
             Assert.IsTrue(intention.EventType.HasValue);
             Assert.AreEqual(SmartInsiderEventType.NotSpecified, intention.EventType);
             Assert.AreEqual(SmartInsiderExecution.Error, intention.Execution);
             Assert.AreEqual(SmartInsiderExecutionEntity.Error, intention.ExecutionEntity);
             Assert.AreEqual(SmartInsiderExecutionHolding.Error, intention.ExecutionHolding);
+            Assert.AreEqual("US", intention.TickerCountry);
         }
     }
 }
