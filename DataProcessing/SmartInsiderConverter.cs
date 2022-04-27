@@ -286,8 +286,8 @@ namespace QuantConnect.DataProcessing
                 var newMinPrice = newMin < minPrice ? newMin : minPrice;
                 var newMax = decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture);
                 var newMaxPrice = newMax > maxPrice ? newMax : maxPrice;
-                var newAmount = long.Parse(oldValue[0]) + amount;
-                var newAmountValue = long.Parse(oldValue[1]) + amountValue;
+                var newAmount = long.Parse(oldValue[0], NumberStyles.Any, CultureInfo.InvariantCulture) + amount;
+                var newAmountValue = long.Parse(oldValue[1], NumberStyles.Any, CultureInfo.InvariantCulture) + amountValue;
                 var newPercent = decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture) + percent;
 
                 dataDict[sid] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newAmountValue},{newPercent}";
@@ -330,8 +330,8 @@ namespace QuantConnect.DataProcessing
                 var newMinPrice = newMin < price ? newMin : price;
                 var newMax = decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture);
                 var newMaxPrice = newMax > price ? newMax : price;
-                var newAmount = decimal.Parse(oldValue[0]) + amount;
-                var newValue = decimal.Parse(oldValue[3]) + usdValue;
+                var newAmount = decimal.Parse(oldValue[0], NumberStyles.Any, CultureInfo.InvariantCulture) + amount;
+                var newValue = decimal.Parse(oldValue[3], NumberStyles.Any, CultureInfo.InvariantCulture) + usdValue;
                 var newBuybackPercentage = decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture) + buybackPercentage;
                 var newVolumePercentage = decimal.Parse(oldValue[5], NumberStyles.Any, CultureInfo.InvariantCulture) + volumePercentage;
 
