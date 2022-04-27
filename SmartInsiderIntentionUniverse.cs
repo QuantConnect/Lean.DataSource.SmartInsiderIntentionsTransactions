@@ -32,7 +32,7 @@ namespace QuantConnect.DataSource
         /// <summary>
         /// Number of shares to be or authorised to be traded
         /// </summary>
-        public int? Amount { get; set; }
+        public long? Amount { get; set; }
 
         /// <summary>
         /// Value of shares to be authorised to be traded
