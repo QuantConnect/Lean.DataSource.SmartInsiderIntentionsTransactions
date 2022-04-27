@@ -164,6 +164,12 @@ namespace QuantConnect.DataProcessing
                     throw new ArgumentException("SmartInsiderConverter.Process(): Header row was not found!");
                 }
 
+                if(line.All((x) => x == '\t'))
+                {
+                    //blank line
+                    continue;
+                }
+
                 var dataInstance = new T();
                 dataInstance.FromRawData(line, indexes);
 
@@ -332,8 +338,20 @@ namespace QuantConnect.DataProcessing
                 var newMaxPrice = newMax > price ? newMax : price;
                 var newAmount = decimal.Parse(oldValue[0], NumberStyles.Any, CultureInfo.InvariantCulture) + amount;
                 var newValue = decimal.Parse(oldValue[3], NumberStyles.Any, CultureInfo.InvariantCulture) + usdValue;
-                var newBuybackPercentage = decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture) + buybackPercentage;
-                var newVolumePercentage = decimal.Parse(oldValue[5], NumberStyles.Any, CultureInfo.InvariantCulture) + volumePercentage;
+
+                var prevBuybackPercentage = 0m;
+                if (!string.IsNullOrEmpty(oldValue[4]))
+                {
+                    prevBuybackPercentage = decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture);
+                }
+                var newBuybackPercentage = prevBuybackPercentage + buybackPercentage;
+
+                var prevVolumePercentage = 0m;
+                if (!string.IsNullOrEmpty(oldValue[5]))
+                {
+                    prevVolumePercentage = decimal.Parse(oldValue[5], NumberStyles.Any, CultureInfo.InvariantCulture);
+                }
+                var newVolumePercentage = prevVolumePercentage + volumePercentage;
 
                 dataDict[sid] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newValue},{newBuybackPercentage},{newVolumePercentage}";
             }
