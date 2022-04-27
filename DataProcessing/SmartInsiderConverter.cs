@@ -285,16 +285,26 @@ namespace QuantConnect.DataProcessing
             }
             else
             {
+                // Consolidate same day, same ticker value
                 var oldValue = dataDict[sid].Split(",");
 
-                // Consolidate same day, same ticker value
-                var newMin = decimal.Parse(oldValue[3], NumberStyles.Any, CultureInfo.InvariantCulture);
-                var newMinPrice = newMin < minPrice ? newMin : minPrice;
-                var newMax = decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture);
-                var newMaxPrice = newMax > maxPrice ? newMax : maxPrice;
-                var newAmount = long.Parse(oldValue[0], NumberStyles.Any, CultureInfo.InvariantCulture) + amount;
-                var newAmountValue = long.Parse(oldValue[1], NumberStyles.Any, CultureInfo.InvariantCulture) + amountValue;
-                var newPercent = decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture) + percent;
+                var newMinPrice = minPrice;
+                if (!string.IsNullOrEmpty(oldValue[3]))
+                {
+                    var newMin = decimal.Parse(oldValue[3], NumberStyles.Any, CultureInfo.InvariantCulture);
+                    newMinPrice = newMin < minPrice ? newMin : minPrice;
+                }
+
+                var newMaxPrice = maxPrice;
+                if (!string.IsNullOrEmpty(oldValue[4]))
+                {
+                    var newMax = decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture);
+                    newMaxPrice = newMax > maxPrice ? newMax : maxPrice;
+                }
+
+                var newAmount = (string.IsNullOrEmpty(oldValue[0]) ? 0 : long.Parse(oldValue[0], NumberStyles.Any, CultureInfo.InvariantCulture)) + amount;
+                var newAmountValue = (string.IsNullOrEmpty(oldValue[1]) ? 0 : long.Parse(oldValue[1], NumberStyles.Any, CultureInfo.InvariantCulture)) + amountValue;
+                var newPercent = (string.IsNullOrEmpty(oldValue[2]) ? 0 : decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture)) + percent;
 
                 dataDict[sid] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newAmountValue},{newPercent}";
             }
@@ -329,29 +339,27 @@ namespace QuantConnect.DataProcessing
             }
             else
             {
+                // Consolidate same day, same ticker value
                 var oldValue = dataDict[sid].Split(",");
 
-                // Consolidate same day, same ticker value
-                var newMin = decimal.Parse(oldValue[1], NumberStyles.Any, CultureInfo.InvariantCulture);
-                var newMinPrice = newMin < price ? newMin : price;
-                var newMax = decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture);
-                var newMaxPrice = newMax > price ? newMax : price;
-                var newAmount = decimal.Parse(oldValue[0], NumberStyles.Any, CultureInfo.InvariantCulture) + amount;
-                var newValue = decimal.Parse(oldValue[3], NumberStyles.Any, CultureInfo.InvariantCulture) + usdValue;
-
-                var prevBuybackPercentage = 0m;
-                if (!string.IsNullOrEmpty(oldValue[4]))
+                var newMinPrice = price;
+                if (!string.IsNullOrEmpty(oldValue[1]))
                 {
-                    prevBuybackPercentage = decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture);
+                    var newMin = decimal.Parse(oldValue[1], NumberStyles.Any, CultureInfo.InvariantCulture);
+                    newMinPrice = newMin < price ? newMin : price;
                 }
-                var newBuybackPercentage = prevBuybackPercentage + buybackPercentage;
 
-                var prevVolumePercentage = 0m;
-                if (!string.IsNullOrEmpty(oldValue[5]))
+                var newMaxPrice = price;
+                if (!string.IsNullOrEmpty(oldValue[2]))
                 {
-                    prevVolumePercentage = decimal.Parse(oldValue[5], NumberStyles.Any, CultureInfo.InvariantCulture);
+                    var newMax = decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture);
+                    newMaxPrice = newMax > price ? newMax : price;
                 }
-                var newVolumePercentage = prevVolumePercentage + volumePercentage;
+
+                var newAmount = (string.IsNullOrEmpty(oldValue[0]) ? 0 : decimal.Parse(oldValue[0], NumberStyles.Any, CultureInfo.InvariantCulture)) + amount;
+                var newValue = (string.IsNullOrEmpty(oldValue[3]) ? 0 : decimal.Parse(oldValue[3], NumberStyles.Any, CultureInfo.InvariantCulture)) + usdValue;
+                var newBuybackPercentage = (string.IsNullOrEmpty(oldValue[4]) ? 0 : decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture)) + buybackPercentage;
+                var newVolumePercentage = (string.IsNullOrEmpty(oldValue[5]) ? 0 : decimal.Parse(oldValue[5], NumberStyles.Any, CultureInfo.InvariantCulture)) + volumePercentage;
 
                 dataDict[sid] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newValue},{newBuybackPercentage},{newVolumePercentage}";
             }
