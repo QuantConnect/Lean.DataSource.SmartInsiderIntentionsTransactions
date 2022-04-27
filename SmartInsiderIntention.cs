@@ -51,7 +51,7 @@ namespace QuantConnect.DataSource
         /// <summary>
         /// Number of shares to be or authorised to be traded
         /// </summary>
-        public int? Amount { get; set; }
+        public long? Amount { get; set; }
 
         /// <summary>
         /// Currency of the value of shares to be/Authorised to be traded (ISO Code)

@@ -21,4 +21,11 @@
       </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="config.json" />
+      <Content Include="config.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
 </Project>
