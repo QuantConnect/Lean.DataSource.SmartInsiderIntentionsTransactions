@@ -38,9 +38,8 @@ namespace QuantConnect.DataProcessing
             var sourceDirectory = new DirectoryInfo(Config.Get("raw-folder", "/raw"));
             var destinationDirectory = Directory.CreateDirectory(Config.Get("temp-output-directory", "/temp-output-directory"));
             var processedDataDirectory = new DirectoryInfo(Config.Get("processed-data-directory", Globals.DataFolder));
-            var processingDateValue = Environment.GetEnvironmentVariable("QC_DATAFLEET_DEPLOYMENT_DATE");
-            var processingDate = Parse.DateTimeExact(processingDateValue, "yyyyMMdd");
-
+            var processingDateValue = Config.Get("processing-date-value", Environment.GetEnvironmentVariable("QC_DATAFLEET_DEPLOYMENT_DATE"));
+            
             SmartInsiderConverter instance = null;
             try
             {
@@ -58,11 +57,19 @@ namespace QuantConnect.DataProcessing
             try
             {
                 // Run the data downloader/converter.
-                var success = instance.Convert(processingDate);
-                if (!success)
+                if (processingDateValue == string.Empty)
                 {
-                    Log.Error($"QuantConnect.DataProcessing.Program.Main(): Failed to process Smart Insider data");
-                    Environment.Exit(1);
+                    instance.Convert();
+                }
+                else
+                {
+                    var success = instance.Convert(Parse.DateTimeExact(processingDateValue, "yyyyMMdd"));
+                
+                    if (!success)
+                    {
+                        Log.Error($"QuantConnect.DataProcessing.Program.Main(): Failed to process Smart Insider data");
+                        Environment.Exit(1);
+                    }
                 }
             }
             catch (Exception err)

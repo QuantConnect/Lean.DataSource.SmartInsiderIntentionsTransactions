@@ -60,6 +60,65 @@ namespace QuantConnect.DataProcessing
         }
 
         /// <summary>
+        /// Converts all raw data from Smart Insider
+        /// </summary>
+        public void Convert()
+        {
+            Log.Trace($"SmartInsiderConverter.Convert(): Begin converting {_sourceDirectory.FullName}");
+
+            var intentionsDirectory = new DirectoryInfo(Path.Combine(_destinationDirectory.FullName, "intentions"));
+            var transactionsDirectory = new DirectoryInfo(Path.Combine(_destinationDirectory.FullName, "transactions"));
+                
+            foreach (var file in Directory.GetFiles(Path.Combine(_sourceDirectory.FullName, "intentions"), "*.ttx"))
+            {
+                try
+                {
+                    var data = Process<SmartInsiderIntention>(new FileInfo(file));
+                    if (!data.Any())
+                    {
+                        Log.Trace("SmartInsiderConverter.Convert(): Intentions file contains no data to write");
+                    }
+
+                    WriteToFile(intentionsDirectory, data);
+                }
+                catch
+                {
+                    Log.Trace("SmartInsiderConverter.Convert(): Intentions file failed to write");
+                }
+            }
+
+            foreach (var file in Directory.GetFiles(Path.Combine(_sourceDirectory.FullName, "transactions"), "*.ttx"))
+            {
+                try
+                {
+                    var data = Process<SmartInsiderTransaction>(new FileInfo(file));
+                    if (!data.Any())
+                    {
+                        Log.Trace("SmartInsiderConverter.Convert(): transactions file contains no data to write");
+                    }
+
+                    WriteToFile(transactionsDirectory, data);
+                }
+                catch
+                {
+                    Log.Trace("SmartInsiderConverter.Convert(): transaction file failed to write");
+                }
+            }
+
+            if (_intentionUniverse.Count > 0)
+            {
+                WriteUniverseFile(intentionsDirectory, _intentionUniverse);
+            }
+
+            if (_transactionUniverse.Count > 0)
+            {
+                WriteUniverseFile(transactionsDirectory, _transactionUniverse);
+            }
+
+            Log.Trace("SmartInsiderConverter.Convert(): Parsed all raw SmartInsider data");
+        }
+
+        /// <summary>
         /// Converts raw data from Smart Insider
         /// </summary>
         /// <param name="date">Date to process</param>
@@ -239,29 +298,29 @@ namespace QuantConnect.DataProcessing
         /// <summary>
         /// Processes the data to universe
         /// </summary>
-        /// <param name="sid">security ID string</param>
+        /// <param name="tickerInfo">ticker info string containing security ID string and ticker symbol</param>
         /// <param name="data">Base class data</param>
-        private void ProcessUniverse<T>(string sid, T data)
+        private void ProcessUniverse<T>(string tickerInfo, T data)
             where T : SmartInsiderEvent
         {
             if (typeof(T) == typeof(SmartInsiderIntention))
             {
                 var intention = data as SmartInsiderIntention;
-                ProcessUniverse(sid, intention);
+                ProcessUniverse(tickerInfo, intention);
             }
             else if (typeof(T) == typeof(SmartInsiderTransaction))
             {
                 var transaction = data as SmartInsiderTransaction;
-                ProcessUniverse(sid, transaction);
+                ProcessUniverse(tickerInfo, transaction);
             }
         }
 
         /// <summary>
         /// Processes the data to universe
         /// </summary>
-        /// <param name="sid">security ID string</param>
+        /// <param name="tickerInfo">ticker info string containing security ID string and ticker symbol</param>
         /// <param name="data">Base class data</param>
-        private void ProcessUniverse(string sid, SmartInsiderIntention data)
+        private void ProcessUniverse(string tickerInfo, SmartInsiderIntention data)
         {
             var date = $"{data.AnnouncementDate:yyyyMMdd}";
             var cap = data.USDMarketCap;
@@ -279,14 +338,14 @@ namespace QuantConnect.DataProcessing
                 _intentionUniverse[date] = dataDict;
             }
 
-            if (!dataDict.ContainsKey(sid))
+            if (!dataDict.ContainsKey(tickerInfo))
             {
-                dataDict.Add(sid, dataInstance);
+                dataDict.Add(tickerInfo, dataInstance);
             }
             else
             {
                 // Consolidate same day, same ticker value
-                var oldValue = dataDict[sid].Split(",");
+                var oldValue = dataDict[tickerInfo].Split(",");
 
                 var newMinPrice = minPrice;
                 if (!string.IsNullOrEmpty(oldValue[3]))
@@ -302,20 +361,20 @@ namespace QuantConnect.DataProcessing
                     newMaxPrice = newMax > maxPrice ? newMax : maxPrice;
                 }
 
-                var newAmount = (string.IsNullOrEmpty(oldValue[0]) ? 0 : long.Parse(oldValue[0], NumberStyles.Any, CultureInfo.InvariantCulture)) + amount;
-                var newAmountValue = (string.IsNullOrEmpty(oldValue[1]) ? 0 : long.Parse(oldValue[1], NumberStyles.Any, CultureInfo.InvariantCulture)) + amountValue;
-                var newPercent = (string.IsNullOrEmpty(oldValue[2]) ? 0 : decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture)) + percent;
+                var newAmount = (string.IsNullOrEmpty(oldValue[0]) ? 0L : long.Parse(oldValue[0], NumberStyles.Any, CultureInfo.InvariantCulture)) + amount;
+                var newAmountValue = (string.IsNullOrEmpty(oldValue[1]) ? 0L : long.Parse(oldValue[1], NumberStyles.Any, CultureInfo.InvariantCulture)) + amountValue;
+                var newPercent = (string.IsNullOrEmpty(oldValue[2]) ? 0m : decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture)) + percent;
 
-                dataDict[sid] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newAmountValue},{newPercent}";
+                dataDict[tickerInfo] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newAmountValue},{newPercent}";
             }
         }
 
         /// <summary>
         /// Processes the data to universe
         /// </summary>
-        /// <param name="sid">security ID string</param>
+        /// <param name="tickerInfo">ticker info string containing security ID string and ticker symbol</param>
         /// <param name="data">Base class data</param>
-        private void ProcessUniverse(string sid, SmartInsiderTransaction data)
+        private void ProcessUniverse(string tickerInfo, SmartInsiderTransaction data)
         {
             var date = $"{data.BuybackDate:yyyyMMdd}";
             var cap = data.USDMarketCap;
@@ -333,14 +392,14 @@ namespace QuantConnect.DataProcessing
                 _transactionUniverse[date] = dataDict;
             }
 
-            if (!dataDict.ContainsKey(sid))
+            if (!dataDict.ContainsKey(tickerInfo))
             {
-                dataDict.Add(sid, dataInstance);
+                dataDict.Add(tickerInfo, dataInstance);
             }
             else
             {
                 // Consolidate same day, same ticker value
-                var oldValue = dataDict[sid].Split(",");
+                var oldValue = dataDict[tickerInfo].Split(",");
 
                 var newMinPrice = price;
                 if (!string.IsNullOrEmpty(oldValue[1]))
@@ -361,7 +420,7 @@ namespace QuantConnect.DataProcessing
                 var newBuybackPercentage = (string.IsNullOrEmpty(oldValue[4]) ? 0 : decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture)) + buybackPercentage;
                 var newVolumePercentage = (string.IsNullOrEmpty(oldValue[5]) ? 0 : decimal.Parse(oldValue[5], NumberStyles.Any, CultureInfo.InvariantCulture)) + volumePercentage;
 
-                dataDict[sid] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newValue},{newBuybackPercentage},{newVolumePercentage}";
+                dataDict[tickerInfo] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newValue},{newBuybackPercentage},{newVolumePercentage}";
             }
         }
 
