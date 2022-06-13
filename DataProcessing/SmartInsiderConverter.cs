@@ -218,7 +218,7 @@ namespace QuantConnect.DataProcessing
                 }
 
                 var sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, newTicker, Market.USA);
-                ProcessUniverse(sid.ToString(), dataInstance);
+                ProcessUniverse($"{sid},{newTicker}", dataInstance);
 
                 List<T> symbolLines;
                 if (!lines.TryGetValue(newTicker, out symbolLines))

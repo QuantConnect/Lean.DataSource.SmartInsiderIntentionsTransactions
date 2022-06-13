@@ -102,7 +102,7 @@ namespace QuantConnect.DataSource
             return new SmartInsiderIntentionUniverse
             {
                 Symbol = new Symbol(SecurityIdentifier.Parse(csv[0]), csv[1]),
-                Time = date - _period,
+                Time = date,
                 Value = Convert.ToDecimal(amountValue),
 
                 MinimumPrice = csv[3].IfNotNullOrEmpty<decimal?>(x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)),
