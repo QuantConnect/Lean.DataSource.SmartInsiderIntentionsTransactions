@@ -38,7 +38,7 @@ namespace QuantConnect.DataProcessing
             var sourceDirectory = new DirectoryInfo(Config.Get("raw-folder", "/raw"));
             var destinationDirectory = Directory.CreateDirectory(Config.Get("temp-output-directory", "/temp-output-directory"));
             var processedDataDirectory = new DirectoryInfo(Config.Get("processed-data-directory", Globals.DataFolder));
-            var processingDateValue = Config.Get("processing-date-value", Environment.GetEnvironmentVariable("QC_DATAFLEET_DEPLOYMENT_DATE"));
+            var processingDateValue = Config.Get("processing-date", Environment.GetEnvironmentVariable("QC_DATAFLEET_DEPLOYMENT_DATE"));
             
             SmartInsiderConverter instance = null;
             try
@@ -57,7 +57,7 @@ namespace QuantConnect.DataProcessing
             try
             {
                 // Run the data downloader/converter.
-                if (processingDateValue == string.Empty)
+                if (processingDateValue == "all")
                 {
                     instance.Convert();
                 }

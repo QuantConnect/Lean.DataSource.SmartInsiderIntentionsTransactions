@@ -27,7 +27,7 @@ namespace QuantConnect.DataSource
     /// </summary>
     public class SmartInsiderIntentionUniverse : BaseData
     {
-        private TimeSpan _period = TimeSpan.FromDays(1);
+        private static readonly TimeSpan _period = TimeSpan.FromDays(1);
         
         /// <summary>
         /// Number of shares to be or authorised to be traded
