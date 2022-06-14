@@ -384,7 +384,6 @@ namespace QuantConnect.DataProcessing
             var buybackPercentage = data.BuybackPercentage;
             var volumePercentage = data.VolumePercentage;
             var dataInstance = $@"{cap},{price},{price},{amount},{usdValue},{buybackPercentage},{volumePercentage}";
-            Console.WriteLine(dataInstance);
 
             Dictionary<string, string> dataDict;
             if (!_transactionUniverse.TryGetValue(date, out dataDict))
