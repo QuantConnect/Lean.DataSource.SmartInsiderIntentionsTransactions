@@ -36,7 +36,7 @@ namespace QuantConnect.DataProcessing
 
         private readonly MapFileResolver _mapFileResolver;
 
-        private Dictionary<string, Dictionary<string, string>> _intentionUniverse = new();
+         private Dictionary<string, Dictionary<string, string>> _intentionUniverse = new();
         private Dictionary<string, Dictionary<string, string>> _transactionUniverse = new();
 
         /// <summary>
@@ -186,6 +186,57 @@ namespace QuantConnect.DataProcessing
             return true;
         }
 
+        public void ConvertUniverse()
+        {
+            var intentionsDirectory = new DirectoryInfo(Path.Combine(_destinationDirectory.FullName, "intentions"));
+            var transactionsDirectory = new DirectoryInfo(Path.Combine(_destinationDirectory.FullName, "transactions"));
+
+            ConvertUniverse("intentions");
+            ConvertUniverse("transactions");
+
+            if (_intentionUniverse.Count > 0)
+            {
+                WriteUniverseFile(intentionsDirectory, _intentionUniverse);
+            }
+
+            if (_transactionUniverse.Count > 0)
+            {
+                WriteUniverseFile(transactionsDirectory, _transactionUniverse);
+            }
+        }
+
+        private void ConvertUniverse(string dataType)
+        {
+            foreach (var file in Directory.GetFiles(Path.Combine(_destinationDirectory.FullName, dataType), "*.tsv"))
+            {
+                foreach (var line in File.ReadLines(file))
+                {
+                    SmartInsiderEvent dataInstance;
+
+                    switch (dataType)
+                    {
+                        case "intentions":
+                            dataInstance = new SmartInsiderIntention(line);
+                            break;
+
+                        case "transactions":
+                            dataInstance = new SmartInsiderTransaction(line);
+                            break;
+
+                        default: 
+                            throw new Exception($"SmartInsiderConverter.ConvertUniverse(): Unsupported data type - {dataType}");
+                    }
+
+                    var ticker = dataInstance.TickerSymbol;
+                    var mapFile = _mapFileResolver.ResolveMapFile(ticker, dataInstance.LastUpdate);
+                    var newTicker = mapFile.GetMappedSymbol(dataInstance.LastUpdate);
+                    var sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, newTicker, Market.USA);
+
+                    ProcessUniverse($"{sid},{newTicker}", dataInstance);
+                }
+            }
+        }
+
         /// <summary>
         /// Processes the data
         /// </summary>
@@ -303,12 +354,12 @@ namespace QuantConnect.DataProcessing
         private void ProcessUniverse<T>(string tickerInfo, T data)
             where T : SmartInsiderEvent
         {
-            if (typeof(T) == typeof(SmartInsiderIntention))
+            if (data.GetType() == typeof(SmartInsiderIntention))
             {
                 var intention = data as SmartInsiderIntention;
                 ProcessUniverse(tickerInfo, intention);
             }
-            else if (typeof(T) == typeof(SmartInsiderTransaction))
+            else if (data.GetType() == typeof(SmartInsiderTransaction))
             {
                 var transaction = data as SmartInsiderTransaction;
                 ProcessUniverse(tickerInfo, transaction);

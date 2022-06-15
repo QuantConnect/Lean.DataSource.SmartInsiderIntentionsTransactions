@@ -57,19 +57,26 @@ namespace QuantConnect.DataProcessing
             try
             {
                 // Run the data downloader/converter.
-                if (processingDateValue == "all")
+                switch (processingDateValue)
                 {
-                    instance.Convert();
-                }
-                else
-                {
-                    var success = instance.Convert(Parse.DateTimeExact(processingDateValue, "yyyyMMdd"));
+                    case "all":
+                        instance.Convert();
+                        break;
+                    
+                    case "universe":
+                        instance.ConvertUniverse();
+                        break;
+
+                    default:
+                        var success = instance.Convert(Parse.DateTimeExact(processingDateValue, "yyyyMMdd"));
                 
-                    if (!success)
-                    {
-                        Log.Error($"QuantConnect.DataProcessing.Program.Main(): Failed to process Smart Insider data");
-                        Environment.Exit(1);
-                    }
+                        if (!success)
+                        {
+                            Log.Error($"QuantConnect.DataProcessing.Program.Main(): Failed to process Smart Insider data");
+                            Environment.Exit(1);
+                        }
+                        
+                        break;
                 }
             }
             catch (Exception err)
