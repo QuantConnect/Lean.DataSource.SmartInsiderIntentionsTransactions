@@ -27,7 +27,7 @@ namespace QuantConnect.DataSource
     /// </summary>
     public class SmartInsiderTransactionUniverse : BaseData
     {
-        private TimeSpan _period = TimeSpan.FromDays(1);
+        private static readonly TimeSpan _period = TimeSpan.FromDays(1);
         
         /// <summary>
         /// Number of shares traded
@@ -107,7 +107,7 @@ namespace QuantConnect.DataSource
             return new SmartInsiderTransactionUniverse
             {
                 Symbol = new Symbol(SecurityIdentifier.Parse(csv[0]), csv[1]),
-                Time = date - _period,
+                Time = date,
                 Value = Convert.ToDecimal(usdValue),
 
                 USDMarketCap = csv[2].IfNotNullOrEmpty<decimal?>(x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)),
