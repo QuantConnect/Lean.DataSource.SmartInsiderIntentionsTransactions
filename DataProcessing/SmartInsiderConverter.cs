@@ -191,40 +191,38 @@ namespace QuantConnect.DataProcessing
             var intentionsDirectory = new DirectoryInfo(Path.Combine(_destinationDirectory.FullName, "intentions"));
             var transactionsDirectory = new DirectoryInfo(Path.Combine(_destinationDirectory.FullName, "transactions"));
 
-            ConvertUniverse("intentions");
-            ConvertUniverse("transactions");
-
+            ConvertUniverse<SmartInsiderIntention>("intentions");
             if (_intentionUniverse.Count > 0)
             {
                 WriteUniverseFile(intentionsDirectory, _intentionUniverse);
             }
 
+            ConvertUniverse<SmartInsiderTransaction>("transactions");
             if (_transactionUniverse.Count > 0)
             {
                 WriteUniverseFile(transactionsDirectory, _transactionUniverse);
             }
         }
 
-        private void ConvertUniverse(string dataType)
+        private void ConvertUniverse<T>(string dataType) where T : SmartInsiderEvent, new()
         {
-            foreach (var file in Directory.GetFiles(Path.Combine(_destinationDirectory.FullName, dataType), "*.tsv"))
+            foreach (var file in Directory.GetFiles(Path.Combine(_processedDirectory.FullName, dataType), "*.tsv"))
             {
                 foreach (var line in File.ReadLines(file))
                 {
-                    SmartInsiderEvent dataInstance;
+                    T dataInstance;
 
-                    switch (dataType)
+                    if (typeof(T) == typeof(SmartInsiderIntention))
                     {
-                        case "intentions":
-                            dataInstance = new SmartInsiderIntention(line);
-                            break;
-
-                        case "transactions":
-                            dataInstance = new SmartInsiderTransaction(line);
-                            break;
-
-                        default: 
-                            throw new Exception($"SmartInsiderConverter.ConvertUniverse(): Unsupported data type - {dataType}");
+                        dataInstance = new SmartInsiderIntention(line) as T;
+                    }
+                    else if (typeof(T) == typeof(SmartInsiderTransaction))
+                    {
+                        dataInstance = new SmartInsiderTransaction(line) as T;
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Unexpected data type {typeof(T)}");
                     }
 
                     var ticker = dataInstance.TickerSymbol;
@@ -354,12 +352,12 @@ namespace QuantConnect.DataProcessing
         private void ProcessUniverse<T>(string tickerInfo, T data)
             where T : SmartInsiderEvent
         {
-            if (data.GetType() == typeof(SmartInsiderIntention))
+            if (typeof(T) == typeof(SmartInsiderIntention))
             {
                 var intention = data as SmartInsiderIntention;
                 ProcessUniverse(tickerInfo, intention);
             }
-            else if (data.GetType() == typeof(SmartInsiderTransaction))
+            else if (typeof(T) == typeof(SmartInsiderTransaction))
             {
                 var transaction = data as SmartInsiderTransaction;
                 ProcessUniverse(tickerInfo, transaction);
