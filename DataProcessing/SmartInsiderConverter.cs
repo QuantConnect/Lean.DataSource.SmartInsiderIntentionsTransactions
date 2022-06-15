@@ -397,22 +397,22 @@ namespace QuantConnect.DataProcessing
                 var oldValue = dataDict[tickerInfo].Split(",");
 
                 var newMinPrice = minPrice;
-                if (!string.IsNullOrEmpty(oldValue[3]))
+                if (!string.IsNullOrEmpty(oldValue[1]))
                 {
-                    var newMin = decimal.Parse(oldValue[3], NumberStyles.Any, CultureInfo.InvariantCulture);
+                    var newMin = decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture);
                     newMinPrice = newMin < minPrice ? newMin : minPrice;
                 }
 
                 var newMaxPrice = maxPrice;
-                if (!string.IsNullOrEmpty(oldValue[4]))
+                if (!string.IsNullOrEmpty(oldValue[2]))
                 {
-                    var newMax = decimal.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture);
+                    var newMax = decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture);
                     newMaxPrice = newMax > maxPrice ? newMax : maxPrice;
                 }
 
-                var newAmount = (string.IsNullOrEmpty(oldValue[0]) ? 0 : long.Parse(oldValue[0], NumberStyles.Any, CultureInfo.InvariantCulture)) + amount;
-                var newAmountValue = (string.IsNullOrEmpty(oldValue[1]) ? 0 : long.Parse(oldValue[1], NumberStyles.Any, CultureInfo.InvariantCulture)) + amountValue;
-                var newPercent = (string.IsNullOrEmpty(oldValue[2]) ? 0 : decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture)) + percent;
+                var newAmount = (string.IsNullOrEmpty(oldValue[3]) ? 0 : long.Parse(oldValue[3], NumberStyles.Any, CultureInfo.InvariantCulture)) + amount;
+                var newAmountValue = (string.IsNullOrEmpty(oldValue[4]) ? 0 : long.Parse(oldValue[4], NumberStyles.Any, CultureInfo.InvariantCulture)) + amountValue;
+                var newPercent = (string.IsNullOrEmpty(oldValue[5]) ? 0 : decimal.Parse(oldValue[5], NumberStyles.Any, CultureInfo.InvariantCulture)) + percent;
 
                 dataDict[tickerInfo] = $"{cap},{newMinPrice},{newMaxPrice},{newAmount},{newAmountValue},{newPercent}";
             }
