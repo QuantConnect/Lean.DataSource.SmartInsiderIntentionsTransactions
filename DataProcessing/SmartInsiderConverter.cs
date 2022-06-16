@@ -36,8 +36,8 @@ namespace QuantConnect.DataProcessing
 
         private readonly MapFileResolver _mapFileResolver;
 
-        public Dictionary<string, Dictionary<string, string>> IntentionUniverse = new();
-        public Dictionary<string, Dictionary<string, string>> TransactionUniverse = new();
+        protected Dictionary<string, Dictionary<string, string>> IntentionUniverse = new();
+        protected Dictionary<string, Dictionary<string, string>> TransactionUniverse = new();
 
         /// <summary>
         /// Creates an instance of the converter
@@ -62,7 +62,7 @@ namespace QuantConnect.DataProcessing
         /// <summary>
         /// Creates an instance of the converter for testing only
         /// </summary>
-        public SmartInsiderConverter()
+        protected SmartInsiderConverter()
         {
         }
 
@@ -357,12 +357,14 @@ namespace QuantConnect.DataProcessing
             return lines;
         }
 
+        ///
+
         /// <summary>
         /// Processes the data to universe
         /// </summary>
         /// <param name="tickerInfo">ticker info string containing security ID string and ticker symbol</param>
         /// <param name="data">Base class data</param>
-        private void ProcessUniverse<T>(string tickerInfo, T data)
+        protected void ProcessUniverse<T>(string tickerInfo, T data)
             where T : SmartInsiderEvent
         {
             if (typeof(T) == typeof(SmartInsiderIntention))
@@ -382,7 +384,7 @@ namespace QuantConnect.DataProcessing
         /// </summary>
         /// <param name="tickerInfo">ticker info string containing security ID string and ticker symbol</param>
         /// <param name="data">Base class data</param>
-        public void ProcessUniverse(string tickerInfo, SmartInsiderIntention data)
+        private void ProcessUniverse(string tickerInfo, SmartInsiderIntention data)
         {
             var date = $"{data.TimeProcessedUtc:yyyyMMdd}";
             var cap = data.USDMarketCap;
@@ -436,7 +438,7 @@ namespace QuantConnect.DataProcessing
         /// </summary>
         /// <param name="tickerInfo">ticker info string containing security ID string and ticker symbol</param>
         /// <param name="data">Base class data</param>
-        public void ProcessUniverse(string tickerInfo, SmartInsiderTransaction data)
+        private void ProcessUniverse(string tickerInfo, SmartInsiderTransaction data)
         {
             var date = $"{data.TimeProcessedUtc:yyyyMMdd}";
             var cap = data.USDMarketCap;

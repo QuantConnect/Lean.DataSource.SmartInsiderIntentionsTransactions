@@ -42,15 +42,16 @@ namespace QuantConnect.DataLibrary.Tests
             ExpectedResult = "SID,ticker,38843345345,154.4500,154.9300,2713215,419380133,0.0108,8.0162")]
         public string ProcessUniverseTest(string[] tickerData, string date)
         {
-            var instance = new SmartInsiderConverter();
+            var instance = new TestSmartInsiderConverter();
 
             foreach (var line in tickerData)
             {
                 var smartInsiderTransaction = new SmartInsiderTransaction(line);
-                instance.ProcessUniverse("SID,ticker", smartInsiderTransaction);
+                instance.TestProcessUniverse("SID,ticker", smartInsiderTransaction);
             }
 
-            var result = instance.TransactionUniverse[date].First();
+            var transactionUniverse = instance.GetTransactionUniverse();
+            var result = transactionUniverse[date].First();
 
             return $"{result.Key},{result.Value}";
         }
