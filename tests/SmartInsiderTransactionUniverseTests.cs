@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
+using QuantConnect.DataProcessing;
 using QuantConnect.DataSource;
 using QuantConnect.Data.Market;
 
@@ -30,6 +31,30 @@ namespace QuantConnect.DataLibrary.Tests
     [TestFixture]
     public class SmartInsiderTransactionUniverseTests
     {
+        [TestCase(
+            new string[]{"20220309 11:53:36	BT812996	Transaction	20220309	20191004	US00846U1016	38843345345	27276	Health Care	Health Care	Medical Equipment and Services	Medical Equipment	20102010	Agilent Technologies Inc	20211217	20220222	20220131	20211217	Com	US	A	20220309	20220303 17:02:17		20220303 22:02:17	US	20211231	On Market	Issuer	For Cancellation	USD	154.4500	2038115	232558230	276699052	314786862		0.0081	6.0456	1.350000			"}, 
+            "20220309",
+            ExpectedResult = "SID,ticker,38843345345,154.4500,154.4500,2038115,314786862,0.0081,6.0456")]
+        [TestCase(
+            new string[]{"20220309 11:52:47	BT812992	Transaction	20220309	20191004	US00846U1016	38843345345	27276	Health Care	Health Care	Medical Equipment and Services	Medical Equipment	20102010	Agilent Technologies Inc	20210901	20211217	20220131	20210901	Com	US	A	20220309	20220303 17:02:17		20220303 22:02:17	US	20211130	On Market	Issuer	For Cancellation	USD	154.9300	675100	78949162	92660500	104593271		0.0027	1.9706	1.320000			",
+                         "20220309 11:53:36	BT812996	Transaction	20220309	20191004	US00846U1016	38843345345	27276	Health Care	Health Care	Medical Equipment and Services	Medical Equipment	20102010	Agilent Technologies Inc	20211217	20220222	20220131	20211217	Com	US	A	20220309	20220303 17:02:17		20220303 22:02:17	US	20211231	On Market	Issuer	For Cancellation	USD	154.4500	2038115	232558230	276699052	314786862		0.0081	6.0456	1.350000			"},
+            "20220309",
+            ExpectedResult = "SID,ticker,38843345345,154.4500,154.9300,2713215,419380133,0.0108,8.0162")]
+        public string ProcessUniverseTest(string[] tickerData, string date)
+        {
+            var instance = new SmartInsiderConverter();
+
+            foreach (var line in tickerData)
+            {
+                var smartInsiderTransaction = new SmartInsiderTransaction(line);
+                instance.ProcessUniverse("SID,ticker", smartInsiderTransaction);
+            }
+
+            var result = instance.TransactionUniverse[date].First();
+
+            return $"{result.Key},{result.Value}";
+        }
+        
         [Test]
         public void JsonRoundTrip()
         {

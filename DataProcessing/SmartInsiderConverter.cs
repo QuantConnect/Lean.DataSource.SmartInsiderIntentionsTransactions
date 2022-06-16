@@ -36,8 +36,8 @@ namespace QuantConnect.DataProcessing
 
         private readonly MapFileResolver _mapFileResolver;
 
-         private Dictionary<string, Dictionary<string, string>> _intentionUniverse = new();
-        private Dictionary<string, Dictionary<string, string>> _transactionUniverse = new();
+        public Dictionary<string, Dictionary<string, string>> IntentionUniverse = new();
+        public Dictionary<string, Dictionary<string, string>> TransactionUniverse = new();
 
         /// <summary>
         /// Creates an instance of the converter
@@ -57,6 +57,13 @@ namespace QuantConnect.DataProcessing
 
             Directory.CreateDirectory(Path.Combine(_destinationDirectory.FullName, "intentions", "universe"));
             Directory.CreateDirectory(Path.Combine(_destinationDirectory.FullName, "transactions", "universe"));
+        }
+
+        /// <summary>
+        /// Creates an instance of the converter for testing only
+        /// </summary>
+        public SmartInsiderConverter()
+        {
         }
 
         /// <summary>
@@ -105,14 +112,14 @@ namespace QuantConnect.DataProcessing
                 }
             }
 
-            if (_intentionUniverse.Count > 0)
+            if (IntentionUniverse.Count > 0)
             {
-                WriteUniverseFile(intentionsDirectory, _intentionUniverse);
+                WriteUniverseFile(intentionsDirectory, IntentionUniverse);
             }
 
-            if (_transactionUniverse.Count > 0)
+            if (TransactionUniverse.Count > 0)
             {
-                WriteUniverseFile(transactionsDirectory, _transactionUniverse);
+                WriteUniverseFile(transactionsDirectory, TransactionUniverse);
             }
 
             Log.Trace("SmartInsiderConverter.Convert(): Parsed all raw SmartInsider data");
@@ -167,14 +174,14 @@ namespace QuantConnect.DataProcessing
                     Log.Error($"SmartInsiderConverter.Convert(): Raw transactions file does not exist: {rawTransactionsFile.FullName}");
                 }
 
-                if (_intentionUniverse.Count > 0)
+                if (IntentionUniverse.Count > 0)
                 {
-                    WriteUniverseFile(intentionsDirectory, _intentionUniverse);
+                    WriteUniverseFile(intentionsDirectory, IntentionUniverse);
                 }
 
-                if (_transactionUniverse.Count > 0)
+                if (TransactionUniverse.Count > 0)
                 {
-                    WriteUniverseFile(transactionsDirectory, _transactionUniverse);
+                    WriteUniverseFile(transactionsDirectory, TransactionUniverse);
                 }
             }
             catch (Exception e)
@@ -186,24 +193,30 @@ namespace QuantConnect.DataProcessing
             return true;
         }
 
+        /// <summary>
+        /// Convert processed tickers files into universe daily files
+        /// </summary>
         public void ConvertUniverse()
         {
             var intentionsDirectory = new DirectoryInfo(Path.Combine(_destinationDirectory.FullName, "intentions"));
             var transactionsDirectory = new DirectoryInfo(Path.Combine(_destinationDirectory.FullName, "transactions"));
 
             ConvertUniverse<SmartInsiderIntention>("intentions");
-            if (_intentionUniverse.Count > 0)
+            if (IntentionUniverse.Count > 0)
             {
-                WriteUniverseFile(intentionsDirectory, _intentionUniverse);
+                WriteUniverseFile(intentionsDirectory, IntentionUniverse);
             }
 
             ConvertUniverse<SmartInsiderTransaction>("transactions");
-            if (_transactionUniverse.Count > 0)
+            if (TransactionUniverse.Count > 0)
             {
-                WriteUniverseFile(transactionsDirectory, _transactionUniverse);
+                WriteUniverseFile(transactionsDirectory, TransactionUniverse);
             }
         }
 
+        /// <summary>
+        /// Convert processed tickers files of type T into universe daily files of type T
+        /// </summary>
         private void ConvertUniverse<T>(string dataType) where T : SmartInsiderEvent, new()
         {
             foreach (var file in Directory.GetFiles(Path.Combine(_processedDirectory.FullName, dataType), "*.tsv"))
@@ -369,7 +382,7 @@ namespace QuantConnect.DataProcessing
         /// </summary>
         /// <param name="tickerInfo">ticker info string containing security ID string and ticker symbol</param>
         /// <param name="data">Base class data</param>
-        private void ProcessUniverse(string tickerInfo, SmartInsiderIntention data)
+        public void ProcessUniverse(string tickerInfo, SmartInsiderIntention data)
         {
             var date = $"{data.TimeProcessedUtc:yyyyMMdd}";
             var cap = data.USDMarketCap;
@@ -381,10 +394,10 @@ namespace QuantConnect.DataProcessing
             var dataInstance = $@"{cap},{minPrice},{maxPrice},{amount},{amountValue},{percent}";
 
             Dictionary<string, string> dataDict;
-            if (!_intentionUniverse.TryGetValue(date, out dataDict))
+            if (!IntentionUniverse.TryGetValue(date, out dataDict))
             {
                 dataDict = new Dictionary<string, string>();
-                _intentionUniverse[date] = dataDict;
+                IntentionUniverse[date] = dataDict;
             }
 
             if (!dataDict.ContainsKey(tickerInfo))
@@ -423,7 +436,7 @@ namespace QuantConnect.DataProcessing
         /// </summary>
         /// <param name="tickerInfo">ticker info string containing security ID string and ticker symbol</param>
         /// <param name="data">Base class data</param>
-        private void ProcessUniverse(string tickerInfo, SmartInsiderTransaction data)
+        public void ProcessUniverse(string tickerInfo, SmartInsiderTransaction data)
         {
             var date = $"{data.TimeProcessedUtc:yyyyMMdd}";
             var cap = data.USDMarketCap;
@@ -435,10 +448,10 @@ namespace QuantConnect.DataProcessing
             var dataInstance = $@"{cap},{price},{price},{amount},{usdValue},{buybackPercentage},{volumePercentage}";
 
             Dictionary<string, string> dataDict;
-            if (!_transactionUniverse.TryGetValue(date, out dataDict))
+            if (!TransactionUniverse.TryGetValue(date, out dataDict))
             {
                 dataDict = new Dictionary<string, string>();
-                _transactionUniverse[date] = dataDict;
+                TransactionUniverse[date] = dataDict;
             }
 
             if (!dataDict.ContainsKey(tickerInfo))
