@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
+using QuantConnect.DataProcessing;
 using QuantConnect.DataSource;
 using QuantConnect.Data.Market;
 
@@ -30,6 +31,36 @@ namespace QuantConnect.DataLibrary.Tests
     [TestFixture]
     public class SmartInsiderIntentionUniverseTests
     {
+        [TestCase(
+            new string[]{"20200921 07:50:38	BI12705	New Intention	20211212	20200602	US00164V1035		68556	Consumer Discretionary	Media	Media	Entertainment	40301010	AMC Networks Inc					Com A	US	AMCX	20200921				US	Tender Offer	Issuer	Not Reported		USD	250000000					22.5000	26.5000	"}, 
+            "20200921",
+            ExpectedResult = "SID,ticker,,22.5000,26.5000,,250000000,")]
+        [TestCase(
+            new string[]{"20200921 07:50:38	BI12705	New Intention	20211212	20200602	US00164V1035		68556	Consumer Discretionary	Media	Media	Entertainment	40301010	AMC Networks Inc					Com A	US	AMCX	20200921				US	Tender Offer	Issuer	Not Reported		USD	250000000					22.5000	26.5000	",
+                         "20200921 07:50:38	BI12705	New Intention	20211212	20200602	US00164V1035		68556	Consumer Discretionary	Media	Media	Entertainment	40301010	AMC Networks Inc					Com A	US	AMCX	20200921				US	Tender Offer	Issuer	Not Reported		USD	250000000					22.5000	27.5000	"},
+            "20200921",
+            ExpectedResult = "SID,ticker,,22.5000,27.5000,,500000000,")]
+        [TestCase(
+            new string[]{"20200921 07:50:38	BI12705	New Intention	20211212	20200602	US00164V1035		68556	Consumer Discretionary	Media	Media	Entertainment	40301010	AMC Networks Inc					Com A	US	AMCX	20200921				US	Tender Offer	Issuer	Not Reported		USD	250000000					22.5000	26.5000	",
+                         "20200922 07:50:38	BI12705	New Intention	20211212	20200602	US00164V1035		68556	Consumer Discretionary	Media	Media	Entertainment	40301010	AMC Networks Inc					Com A	US	AMCX	20200921				US	Tender Offer	Issuer	Not Reported		USD	250000000					22.5000	26.5000	"},
+            "20200921",
+            ExpectedResult = "SID,ticker,,22.5000,26.5000,,250000000,")]
+        public string ProcessUniverseTest(string[] tickerData, string date)
+        {
+            var instance = new TestSmartInsiderConverter();
+
+            foreach (var line in tickerData)
+            {
+                var smartInsiderIntention = new SmartInsiderIntention(line);
+                instance.TestProcessUniverse("SID,ticker", smartInsiderIntention);
+            }
+
+            var intentionUniverse = instance.GetIntentionUniverse();
+            var result = intentionUniverse[date].First();
+
+            return $"{result.Key},{result.Value}";
+        }
+
         [Test]
         public void JsonRoundTrip()
         {

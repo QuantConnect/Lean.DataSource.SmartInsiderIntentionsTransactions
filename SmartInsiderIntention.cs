@@ -14,12 +14,13 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Data;
-using System.Globalization;
 using QuantConnect.Logging;
-using System.Collections.Generic;
 
 namespace QuantConnect.DataSource
 {
@@ -118,7 +119,7 @@ namespace QuantConnect.DataSource
             ExecutionHolding = ExecutionHolding == SmartInsiderExecutionHolding.Error ? SmartInsiderExecutionHolding.SatisfyStockVesting : ExecutionHolding;
             Amount = string.IsNullOrWhiteSpace(tsv[29]) ? (int?)null : Convert.ToInt32(tsv[29], CultureInfo.InvariantCulture);
             ValueCurrency = string.IsNullOrWhiteSpace(tsv[30]) ? null : tsv[30];
-            AmountValue = string.IsNullOrWhiteSpace(tsv[31]) ? (long?)null : Convert.ToInt64(tsv[31], CultureInfo.InvariantCulture);
+            AmountValue = string.IsNullOrWhiteSpace(tsv[31]) ? (long?)null : Convert.ToInt64(new String(tsv[31].Where(Char.IsDigit).ToArray()), CultureInfo.InvariantCulture);
             Percentage = string.IsNullOrWhiteSpace(tsv[32]) ? (decimal?)null : Convert.ToDecimal(tsv[32], CultureInfo.InvariantCulture);
             AuthorizationStartDate = string.IsNullOrWhiteSpace(tsv[33]) ? (DateTime?)null : DateTime.ParseExact(tsv[33], "yyyyMMdd", CultureInfo.InvariantCulture);
             AuthorizationEndDate = string.IsNullOrWhiteSpace(tsv[34]) ? (DateTime?)null : DateTime.ParseExact(tsv[34], "yyyyMMdd", CultureInfo.InvariantCulture);
