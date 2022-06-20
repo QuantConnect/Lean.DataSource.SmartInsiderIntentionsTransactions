@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -26,6 +27,21 @@ namespace QuantConnect.DataLibrary.Tests
     [TestFixture]
     public class SmartInsiderTransactionsTests
     {
+        [TestCase("\"TransactionID\"	\"BuybackType\"	\"LastUpdate\"	\"LastIDsUpdate\"	\"ISIN\"	\"USDMarketCap\"	\"CompanyID\"	\"companyPageURL\"	\"ICBIndustry\"	\"ICBSuperSector\"	\"ICBSector\"	\"ICBSubSector\"	\"ICBCode\"	\"CompanyName\"	\"ShortCompanyName\"	\"previousResultsAnnsDate\"	\"nextResultsAnnsDate\"	\"nextCloseBegin\"	\"LastCloseEnded\"	\"SecurityDescription\"	\"TickerCountry\"	\"TickerSymbol\"	\"BuybackDate\"	\"BybackVia\"	\"BybackBy\"	\"HoldingType\"	\"Currency\"	\"Price\"	\"TransactionAmount\"	\"GBPValue\"	\"EURValue\"	\"USDValue\"	\"NoteText\"	\"BuybackPercentage\"	\"VolumePercentage\"	\"ConvRate\"	\"previousClosePrice\"	\"AmountAdjFactor\"	\"PriceAdjFactor\"	\"TreasuryHolding\"	\"AnnouncementDate\"	\"TimeReleased\"	\"TimeProcessed\"	\"TimeReleasedGMT\"	\"TimeProcessedGMT\"	\"AnnouncedIn\"	\"showOriginal\"	\"IntentionVia\"	\"IntentionBy\"	\"BuybackIntentionHoldingType\"	\"IntentionAmount\"	\"ValueCurrency\"	\"IntentionValue\"	\"IntentionPercentage\"	\"StartDate\"	\"EndDate\"	\"PriceCurrency\"	\"MinimumPrice\"	\"MaximumPrice\"	\"BuybackIntentionNoteText\"	\"UserVarChar1\"	\"UserVarChar2\"	\"UserVarChar3\"	\"UserVarChar4\"	\"UserVarChar5\"	\"SystemVarChar1\"	\"SystemVarChar2\"	\"SystemVarChar3\"	\"SystemVarChar4\"	\"SystemVarChar5\"	\"UserNumber1\"	\"UserNumber2\"	\"UserNumber3\"	\"UserNumber4\"	\"UserNumber5\"	\"SystemNumber1\"	\"SystemNumber2\"	\"SystemNumber3\"	\"SystemNumber4\"	\"SystemNumber5\"	\"UserInteger1\"	\"UserInteger2\"	\"UserInteger3\"	\"UserInteger4\"	\"UserInteger5\"	\"SystemInteger1\"	\"SystemInteger2\"	\"SystemInteger3\"	\"SystemInteger4\"	\"SystemInteger5\"	\"UserDateTime1\"	\"UserDateTime2\"	\"UserDateTime3\"	\"UserDateTime4\"	\"UserDateTime5\"	\"SystemDateTime1\"	\"SystemDateTime2\"	\"SystemDateTime3\"	\"SystemDateTime4\"	\"SystemDateTime5\"",
+                  "\"BT7\"	\"Transaction\"	2021-08-02	2021-02-01	\"GB0008829292\"	1954021690	2142	\"https://data.smartinsider.com/members/company?c=2142\"	\"Financials\"	\"Financial Services\"	\"Closed End Investments\"	\"Closed End Investments\"	30204000	\"Templeton Emerging Markets Investment Trust\"	\"Templeton Emergi\"	2015-06-12			2015-06-12	\"Ord\"	\"GB\"	\"TEM\"	2014-04-09	\"On Market\"	\"Issuer\"	\"For Cancellation\"	\"GBP\"	5.4574	\"27227\"	148589	180016	247832	\" \"	\"0.0001\"	8.6209	1.000000	545.5000	5.000	0.200		2014-04-09	2014-04-09  16:55:00	\"\"	2014-04-09  15:55:00	2014-04-16  16:47:59	\"GB\"	\"https://data.smartinsider.com/members/linkbb?bid=7\"	\"\"	\"\"	\"\"	\"\"	\"\"	\"\"	\"\"	\"\"	\"\"	\"\"	\"\"	\"\"",
+                  ExpectedResult=true)]
+        [TestCase("\"TransactionID\"	\"BuybackType\"	\"LastUpdate\"	\"LastIDsUpdate\"	\"ISIN\"	\"USDMarketCap\"	\"CompanyID\"	\"companyPageURL\"	\"ICBIndustry\"	\"ICBSuperSector\"	\"ICBSector\"	\"ICBSubSector\"	\"ICBCode\"	\"CompanyName\"	\"ShortCompanyName\"	\"previousResultsAnnsDate\"	\"nextResultsAnnsDate\"	\"nextCloseBegin\"	\"LastCloseEnded\"	\"SecurityDescription\"	\"TickerCountry\"	\"TickerSymbol\"	\"BuybackDate\"	\"BybackVia\"	\"BybackBy\"	\"HoldingType\"	\"Currency\"	\"Price\"	\"TransactionAmount\"	\"GBPValue\"	\"EURValue\"	\"USDValue\"	\"NoteText\"	\"BuybackPercentage\"	\"VolumePercentage\"	\"ConvRate\"	\"previousClosePrice\"	\"AmountAdjFactor\"	\"PriceAdjFactor\"	\"TreasuryHolding\"	\"AnnouncementDate\"	\"TimeReleased\"	\"TimeProcessed\"	\"TimeReleasedGMT\"	\"TimeProcessedGMT\"	\"AnnouncedIn\"	\"showOriginal\"	\"IntentionVia\"	\"IntentionBy\"	\"BuybackIntentionHoldingType\"	\"IntentionAmount\"	\"ValueCurrency\"	\"IntentionValue\"	\"IntentionPercentage\"	\"StartDate\"	\"EndDate\"	\"PriceCurrency\"	\"MinimumPrice\"	\"MaximumPrice\"	\"BuybackIntentionNoteText\"	\"UserVarChar1\"	\"UserVarChar2\"	\"UserVarChar3\"	\"UserVarChar4\"	\"UserVarChar5\"	\"SystemVarChar1\"	\"SystemVarChar2\"	\"SystemVarChar3\"	\"SystemVarChar4\"	\"SystemVarChar5\"	\"UserNumber1\"	\"UserNumber2\"	\"UserNumber3\"	\"UserNumber4\"	\"UserNumber5\"	\"SystemNumber1\"	\"SystemNumber2\"	\"SystemNumber3\"	\"SystemNumber4\"	\"SystemNumber5\"	\"UserInteger1\"	\"UserInteger2\"	\"UserInteger3\"	\"UserInteger4\"	\"UserInteger5\"	\"SystemInteger1\"	\"SystemInteger2\"	\"SystemInteger3\"	\"SystemInteger4\"	\"SystemInteger5\"	\"UserDateTime1\"	\"UserDateTime2\"	\"UserDateTime3\"	\"UserDateTime4\"	\"UserDateTime5\"	\"SystemDateTime1\"	\"SystemDateTime2\"	\"SystemDateTime3\"	\"SystemDateTime4\"	\"SystemDateTime5\"",
+                  "\"BT7\"	\"Transaction\"	2021-08-02	2021-02-01	\"GB0008829292\"	1954021690	2142	\"https://data.smartinsider.com/members/company?c=2142\"	\"Financials\"	\"Financial Services\"	\"Closed End Investments\"	\"Closed End Investments\"	30204000	\"Templeton Emerging Markets Investment Trust\"	\"Templeton Emergi\"	2015-06-12			2015-06-12	\"Ord\"	\"GB\"	\"TEM\"	2014-04-09	\"On Market\"	\"Issuer\"	\"For Cancellation\"	\"GBP\"	5.4574	\"27227\"	148589	180016	247832	\" \"	\"0.0001\"	8.6209	1.000000	545.5000	5.000	0.200		2014-04-09	2014-04-09  16:55:00	\"\"	2014-04-09  15:55:AA	2014-04-16  16:47:59	\"GB\"	\"https://data.smartinsider.com/members/linkbb?bid=7\"	\"\"	\"\"	\"\"	\"\"	\"\"	\"\"	\"\"	\"\"	\"\"	\"JAPAN\"	\"asd32513asd\"	\"asd32513asd\"",
+                  ExpectedResult=false)]
+        public bool FromRawFileParseTest(string header, string line)
+        {
+            var headers = header.Replace("\"", "").Split('\t').ToList();
+            var indexes = headers.ToDictionary(s => s, s => headers.IndexOf(s), StringComparer.OrdinalIgnoreCase);
+            
+            var instance = new SmartInsiderTransaction();
+            return instance.FromRawData(line.Replace("\"", ""), indexes);
+        }
+        
         [Test]
         public void JsonRoundTrip()
         {

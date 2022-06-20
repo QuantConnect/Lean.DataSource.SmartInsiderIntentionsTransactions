@@ -134,70 +134,83 @@ namespace QuantConnect.DataSource
         /// </summary>
         /// <param name="line">Line of raw TSV (raw with fields 46, 36, 14, 7 removed in descending order)</param>
         /// <param name="indexes">Index per header column</param>
-        /// <returns>Instance of the object</returns>
-        public override void FromRawData(string line, Dictionary<string, int> indexes)
+        /// <returns>success of the parsing task</returns>
+        public override bool FromRawData(string line, Dictionary<string, int> indexes)
         {
-            var tsv = line.Split('\t');
-            base.FromRawData(line, indexes);
-
-            Execution = null;
-            if (!string.IsNullOrWhiteSpace(tsv[indexes["IntentionVia"]]))
+            try
             {
-                try
+                var tsv = line.Split('\t');
+                if (!base.FromRawData(line, indexes))
                 {
-                    Execution = JsonConvert.DeserializeObject<SmartInsiderExecution>($"\"{tsv[indexes["IntentionVia"]]}\"");
+                    return false;
                 }
-                catch (JsonSerializationException)
-                {
-                    Log.Error($"SmartInsiderIntention.FromRawData(): New unexpected entry found for Execution: {tsv[indexes["IntentionVia"]]}. Parsed as Error.");
-                    Execution = SmartInsiderExecution.Error;
-                }
-            }
 
-            ExecutionEntity = null;
-            if (!string.IsNullOrWhiteSpace(tsv[indexes["IntentionBy"]]))
-            {
-                try
+                Execution = null;
+                if (!string.IsNullOrWhiteSpace(tsv[indexes["IntentionVia"]]))
                 {
-                    ExecutionEntity = JsonConvert.DeserializeObject<SmartInsiderExecutionEntity>($"\"{tsv[indexes["IntentionBy"]]}\"");
-                }
-                catch (JsonSerializationException)
-                {
-                    Log.Error($"SmartInsiderIntention.FromRawData(): New unexpected entry found for ExecutionEntity: {tsv[indexes["IntentionBy"]]}. Parsed as Error.");
-                    ExecutionEntity = SmartInsiderExecutionEntity.Error;
-                }
-            }
-
-            ExecutionHolding = null;
-            if (!string.IsNullOrWhiteSpace(tsv[indexes["BuybackIntentionHoldingType"]]))
-            {
-                try
-                {
-                    ExecutionHolding = JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[indexes["BuybackIntentionHoldingType"]]}\"");
-                    if (ExecutionHolding == SmartInsiderExecutionHolding.Error)
+                    try
                     {
-                        // This error in particular represents a SatisfyStockVesting field.
-                        ExecutionHolding = SmartInsiderExecutionHolding.SatisfyStockVesting;
+                        Execution = JsonConvert.DeserializeObject<SmartInsiderExecution>($"\"{tsv[indexes["IntentionVia"]]}\"");
+                    }
+                    catch (JsonSerializationException)
+                    {
+                        Log.Error($"SmartInsiderIntention.FromRawData(): New unexpected entry found for Execution: {tsv[indexes["IntentionVia"]]}. Parsed as Error.");
+                        Execution = SmartInsiderExecution.Error;
                     }
                 }
-                catch (JsonSerializationException)
+
+                ExecutionEntity = null;
+                if (!string.IsNullOrWhiteSpace(tsv[indexes["IntentionBy"]]))
                 {
-                    Log.Error($"SmartInsiderIntention.FromRawData(): New unexpected entry found for ExecutionHolding: {tsv[indexes["BuybackIntentionHoldingType"]]}. Parsed as Error.");
-                    ExecutionHolding = SmartInsiderExecutionHolding.Error;
-
+                    try
+                    {
+                        ExecutionEntity = JsonConvert.DeserializeObject<SmartInsiderExecutionEntity>($"\"{tsv[indexes["IntentionBy"]]}\"");
+                    }
+                    catch (JsonSerializationException)
+                    {
+                        Log.Error($"SmartInsiderIntention.FromRawData(): New unexpected entry found for ExecutionEntity: {tsv[indexes["IntentionBy"]]}. Parsed as Error.");
+                        ExecutionEntity = SmartInsiderExecutionEntity.Error;
+                    }
                 }
-            }
 
-            Amount = string.IsNullOrWhiteSpace(tsv[indexes["IntentionAmount"]]) ? null : Convert.ToInt64(tsv[indexes["IntentionAmount"]], CultureInfo.InvariantCulture);
-            ValueCurrency = string.IsNullOrWhiteSpace(tsv[indexes[nameof(ValueCurrency)]]) ? null : tsv[indexes[nameof(ValueCurrency)]];
-            AmountValue = string.IsNullOrWhiteSpace(tsv[indexes["IntentionValue"]]) ? null : Convert.ToInt64(tsv[indexes["IntentionValue"]], CultureInfo.InvariantCulture);
-            Percentage = string.IsNullOrWhiteSpace(tsv[indexes["IntentionPercentage"]]) ? null : Convert.ToDecimal(tsv[indexes["IntentionPercentage"]], CultureInfo.InvariantCulture);
-            AuthorizationStartDate = string.IsNullOrWhiteSpace(tsv[indexes["StartDate"]]) ? null : DateTime.ParseExact(tsv[indexes["StartDate"]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            AuthorizationEndDate = string.IsNullOrWhiteSpace(tsv[indexes["EndDate"]]) ? null : DateTime.ParseExact(tsv[indexes["EndDate"]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            PriceCurrency = string.IsNullOrWhiteSpace(tsv[indexes[nameof(PriceCurrency)]]) ? null : tsv[indexes[nameof(PriceCurrency)]];
-            MinimumPrice = string.IsNullOrWhiteSpace(tsv[indexes[nameof(MinimumPrice)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(MinimumPrice)]], CultureInfo.InvariantCulture);
-            MaximumPrice = string.IsNullOrWhiteSpace(tsv[indexes[nameof(MaximumPrice)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(MaximumPrice)]], CultureInfo.InvariantCulture);
-            NoteText = string.IsNullOrWhiteSpace(tsv[indexes["BuybackIntentionNoteText"]]) ? null : tsv[indexes["BuybackIntentionNoteText"]];
+                ExecutionHolding = null;
+                if (!string.IsNullOrWhiteSpace(tsv[indexes["BuybackIntentionHoldingType"]]))
+                {
+                    try
+                    {
+                        ExecutionHolding = JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[indexes["BuybackIntentionHoldingType"]]}\"");
+                        if (ExecutionHolding == SmartInsiderExecutionHolding.Error)
+                        {
+                            // This error in particular represents a SatisfyStockVesting field.
+                            ExecutionHolding = SmartInsiderExecutionHolding.SatisfyStockVesting;
+                        }
+                    }
+                    catch (JsonSerializationException)
+                    {
+                        Log.Error($"SmartInsiderIntention.FromRawData(): New unexpected entry found for ExecutionHolding: {tsv[indexes["BuybackIntentionHoldingType"]]}. Parsed as Error.");
+                        ExecutionHolding = SmartInsiderExecutionHolding.Error;
+
+                    }
+                }
+
+                Amount = string.IsNullOrWhiteSpace(tsv[indexes["IntentionAmount"]]) ? null : Convert.ToInt64(tsv[indexes["IntentionAmount"]], CultureInfo.InvariantCulture);
+                ValueCurrency = string.IsNullOrWhiteSpace(tsv[indexes[nameof(ValueCurrency)]]) ? null : tsv[indexes[nameof(ValueCurrency)]];
+                AmountValue = string.IsNullOrWhiteSpace(tsv[indexes["IntentionValue"]]) ? null : Convert.ToInt64(tsv[indexes["IntentionValue"]], CultureInfo.InvariantCulture);
+                Percentage = string.IsNullOrWhiteSpace(tsv[indexes["IntentionPercentage"]]) ? null : Convert.ToDecimal(tsv[indexes["IntentionPercentage"]], CultureInfo.InvariantCulture);
+                AuthorizationStartDate = string.IsNullOrWhiteSpace(tsv[indexes["StartDate"]]) ? null : DateTime.ParseExact(tsv[indexes["StartDate"]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                AuthorizationEndDate = string.IsNullOrWhiteSpace(tsv[indexes["EndDate"]]) ? null : DateTime.ParseExact(tsv[indexes["EndDate"]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                PriceCurrency = string.IsNullOrWhiteSpace(tsv[indexes[nameof(PriceCurrency)]]) ? null : tsv[indexes[nameof(PriceCurrency)]];
+                MinimumPrice = string.IsNullOrWhiteSpace(tsv[indexes[nameof(MinimumPrice)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(MinimumPrice)]], CultureInfo.InvariantCulture);
+                MaximumPrice = string.IsNullOrWhiteSpace(tsv[indexes[nameof(MaximumPrice)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(MaximumPrice)]], CultureInfo.InvariantCulture);
+                NoteText = string.IsNullOrWhiteSpace(tsv[indexes["BuybackIntentionNoteText"]]) ? null : tsv[indexes["BuybackIntentionNoteText"]];
+            
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                return false;
+            }
         }
 
         /// <summary>

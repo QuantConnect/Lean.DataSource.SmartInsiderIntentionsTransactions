@@ -292,14 +292,9 @@ namespace QuantConnect.DataProcessing
                 }
 
                 var dataInstance = new T();
-                try
+                if (!dataInstance.FromRawData(line, indexes))
                 {
-                    dataInstance.FromRawData(line, indexes);
-                }
-                catch
-                {
-                    Log.Trace($"SmartInsiderConverter.Process(): Faile to parse line into data instance :: {line}");
-                    continue;
+                    throw new Exception($"SmartInsiderConverter.Process(): Faile to parse line into data instance :: {line}");
                 }
 
                 var ticker = dataInstance.TickerSymbol;

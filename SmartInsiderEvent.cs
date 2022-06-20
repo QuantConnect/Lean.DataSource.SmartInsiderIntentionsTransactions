@@ -265,49 +265,60 @@ namespace QuantConnect.DataSource
         /// </summary>
         /// <param name="line">Line of raw TSV (raw with fields 46, 36, 14, 7 removed in descending order)</param>
         /// <param name="indexes">Index per header column</param>
-        public virtual void FromRawData(string line, Dictionary<string, int> indexes)
+        /// <returns>success of the parsing task</returns>
+        public virtual bool FromRawData(string line, Dictionary<string, int> indexes)
         {
-            var tsv = line.Split('\t');
-
-            TransactionID = string.IsNullOrWhiteSpace(tsv[indexes[nameof(TransactionID)]]) ? null : tsv[0];
-            EventType = SmartInsiderEventType.NotSpecified;
-            if (!string.IsNullOrWhiteSpace(tsv[1]))
+            try
             {
-                try
+                var tsv = line.Split('\t');
+
+                TransactionID = string.IsNullOrWhiteSpace(tsv[indexes[nameof(TransactionID)]]) ? null : tsv[0];
+                EventType = SmartInsiderEventType.NotSpecified;
+                if (!string.IsNullOrWhiteSpace(tsv[1]))
                 {
-                    EventType = JsonConvert.DeserializeObject<SmartInsiderEventType>($"\"{tsv[1]}\"");
+                    try
+                    {
+                        EventType = JsonConvert.DeserializeObject<SmartInsiderEventType>($"\"{tsv[1]}\"");
+                    }
+                    catch (JsonSerializationException)
+                    {
+                        Log.Error($"SmartInsiderTransaction.FromRawData(): New unexpected entry found for EventType: {tsv[1]}. Parsed as NotSpecified.");
+                    }
                 }
-                catch (JsonSerializationException)
-                {
-                    Log.Error($"SmartInsiderTransaction.FromRawData(): New unexpected entry found for EventType: {tsv[1]}. Parsed as NotSpecified.");
-                }
+                LastUpdate = DateTime.ParseExact(tsv[indexes[nameof(LastUpdate)]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                LastIDsUpdate = string.IsNullOrWhiteSpace(tsv[indexes[nameof(LastIDsUpdate)]]) ? null : DateTime.ParseExact(tsv[indexes[nameof(LastIDsUpdate)]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                ISIN = string.IsNullOrWhiteSpace(tsv[indexes[nameof(ISIN)]]) ? null : tsv[indexes[nameof(ISIN)]];
+                USDMarketCap = string.IsNullOrWhiteSpace(tsv[indexes[nameof(USDMarketCap)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(USDMarketCap)]], CultureInfo.InvariantCulture);
+                CompanyID = string.IsNullOrWhiteSpace(tsv[indexes[nameof(CompanyID)]]) ? null : Convert.ToInt64(tsv[indexes[nameof(CompanyID)]], CultureInfo.InvariantCulture);
+                ICBIndustry = string.IsNullOrWhiteSpace(tsv[indexes[nameof(ICBIndustry)]]) ? null : tsv[indexes[nameof(ICBIndustry)]];
+                ICBSuperSector = string.IsNullOrWhiteSpace(tsv[indexes[nameof(ICBSuperSector)]]) ? null : tsv[indexes[nameof(ICBSuperSector)]];
+                ICBSector = string.IsNullOrWhiteSpace(tsv[indexes[nameof(ICBSector)]]) ? null : tsv[indexes[nameof(ICBSector)]];
+                ICBSubSector = string.IsNullOrWhiteSpace(tsv[indexes[nameof(ICBSubSector)]]) ? null : tsv[indexes[nameof(ICBSubSector)]];
+                ICBCode = string.IsNullOrWhiteSpace(tsv[indexes[nameof(ICBCode)]]) ? null : Convert.ToInt64(tsv[indexes[nameof(ICBCode)]], CultureInfo.InvariantCulture);
+                CompanyName = string.IsNullOrWhiteSpace(tsv[indexes[nameof(CompanyName)]]) ? null : tsv[indexes[nameof(CompanyName)]];
+
+                PreviousResultsAnnouncementDate = string.IsNullOrWhiteSpace(tsv[indexes["previousResultsAnnsDate"]]) ? null : DateTime.ParseExact(tsv[indexes["previousResultsAnnsDate"]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                NextResultsAnnouncementsDate = string.IsNullOrWhiteSpace(tsv[indexes["nextResultsAnnsDate"]]) ? null : DateTime.ParseExact(tsv[indexes["nextResultsAnnsDate"]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                NextCloseBegin = string.IsNullOrWhiteSpace(tsv[indexes[nameof(NextCloseBegin)]]) ? null : DateTime.ParseExact(tsv[indexes[nameof(NextCloseBegin)]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                LastCloseEnded = string.IsNullOrWhiteSpace(tsv[indexes[nameof(LastCloseEnded)]]) ? null : DateTime.ParseExact(tsv[indexes[nameof(LastCloseEnded)]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                SecurityDescription = string.IsNullOrWhiteSpace(tsv[indexes[nameof(SecurityDescription)]]) ? null : tsv[indexes[nameof(SecurityDescription)]];
+                TickerCountry = string.IsNullOrWhiteSpace(tsv[indexes[nameof(TickerCountry)]]) ? null : tsv[indexes[nameof(TickerCountry)]];
+                TickerSymbol = string.IsNullOrWhiteSpace(tsv[indexes[nameof(TickerSymbol)]]) ? null : tsv[indexes[nameof(TickerSymbol)]];
+
+                AnnouncementDate = string.IsNullOrWhiteSpace(tsv[indexes[nameof(AnnouncementDate)]]) ? null : DateTime.ParseExact(tsv[indexes[nameof(AnnouncementDate)]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                TimeReleased = string.IsNullOrWhiteSpace(tsv[indexes[nameof(TimeReleased)]]) ? null : ParseDate(tsv[indexes[nameof(TimeReleased)]]);
+                TimeProcessed = string.IsNullOrWhiteSpace(tsv[indexes[nameof(TimeProcessed)]]) ? null : ParseDate(tsv[indexes[nameof(TimeProcessed)]]);
+                TimeReleasedUtc = string.IsNullOrWhiteSpace(tsv[indexes["TimeReleasedGMT"]]) ? null : ParseDate(tsv[indexes["TimeReleasedGMT"]]);
+                TimeProcessedUtc = string.IsNullOrWhiteSpace(tsv[indexes["TimeProcessedGMT"]]) ? null : ParseDate(tsv[indexes["TimeProcessedGMT"]]);
+                AnnouncedIn = string.IsNullOrWhiteSpace(tsv[indexes[nameof(AnnouncedIn)]]) ? null : tsv[indexes[nameof(AnnouncedIn)]];
+
+                return true;
             }
-            LastUpdate = DateTime.ParseExact(tsv[indexes[nameof(LastUpdate)]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            LastIDsUpdate = string.IsNullOrWhiteSpace(tsv[indexes[nameof(LastIDsUpdate)]]) ? null : DateTime.ParseExact(tsv[indexes[nameof(LastIDsUpdate)]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            ISIN = string.IsNullOrWhiteSpace(tsv[indexes[nameof(ISIN)]]) ? null : tsv[indexes[nameof(ISIN)]];
-            USDMarketCap = string.IsNullOrWhiteSpace(tsv[indexes[nameof(USDMarketCap)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(USDMarketCap)]], CultureInfo.InvariantCulture);
-            CompanyID = string.IsNullOrWhiteSpace(tsv[indexes[nameof(CompanyID)]]) ? null : Convert.ToInt64(tsv[indexes[nameof(CompanyID)]], CultureInfo.InvariantCulture);
-            ICBIndustry = string.IsNullOrWhiteSpace(tsv[indexes[nameof(ICBIndustry)]]) ? null : tsv[indexes[nameof(ICBIndustry)]];
-            ICBSuperSector = string.IsNullOrWhiteSpace(tsv[indexes[nameof(ICBSuperSector)]]) ? null : tsv[indexes[nameof(ICBSuperSector)]];
-            ICBSector = string.IsNullOrWhiteSpace(tsv[indexes[nameof(ICBSector)]]) ? null : tsv[indexes[nameof(ICBSector)]];
-            ICBSubSector = string.IsNullOrWhiteSpace(tsv[indexes[nameof(ICBSubSector)]]) ? null : tsv[indexes[nameof(ICBSubSector)]];
-            ICBCode = string.IsNullOrWhiteSpace(tsv[indexes[nameof(ICBCode)]]) ? null : Convert.ToInt64(tsv[indexes[nameof(ICBCode)]], CultureInfo.InvariantCulture);
-            CompanyName = string.IsNullOrWhiteSpace(tsv[indexes[nameof(CompanyName)]]) ? null : tsv[indexes[nameof(CompanyName)]];
-
-            PreviousResultsAnnouncementDate = string.IsNullOrWhiteSpace(tsv[indexes["previousResultsAnnsDate"]]) ? null : DateTime.ParseExact(tsv[indexes["previousResultsAnnsDate"]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            NextResultsAnnouncementsDate = string.IsNullOrWhiteSpace(tsv[indexes["nextResultsAnnsDate"]]) ? null : DateTime.ParseExact(tsv[indexes["nextResultsAnnsDate"]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            NextCloseBegin = string.IsNullOrWhiteSpace(tsv[indexes[nameof(NextCloseBegin)]]) ? null : DateTime.ParseExact(tsv[indexes[nameof(NextCloseBegin)]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            LastCloseEnded = string.IsNullOrWhiteSpace(tsv[indexes[nameof(LastCloseEnded)]]) ? null : DateTime.ParseExact(tsv[indexes[nameof(LastCloseEnded)]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            SecurityDescription = string.IsNullOrWhiteSpace(tsv[indexes[nameof(SecurityDescription)]]) ? null : tsv[indexes[nameof(SecurityDescription)]];
-            TickerCountry = string.IsNullOrWhiteSpace(tsv[indexes[nameof(TickerCountry)]]) ? null : tsv[indexes[nameof(TickerCountry)]];
-            TickerSymbol = string.IsNullOrWhiteSpace(tsv[indexes[nameof(TickerSymbol)]]) ? null : tsv[indexes[nameof(TickerSymbol)]];
-
-            AnnouncementDate = string.IsNullOrWhiteSpace(tsv[indexes[nameof(AnnouncementDate)]]) ? null : DateTime.ParseExact(tsv[indexes[nameof(AnnouncementDate)]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            TimeReleased = string.IsNullOrWhiteSpace(tsv[indexes[nameof(TimeReleased)]]) ? null : ParseDate(tsv[indexes[nameof(TimeReleased)]]);
-            TimeProcessed = string.IsNullOrWhiteSpace(tsv[indexes[nameof(TimeProcessed)]]) ? null : ParseDate(tsv[indexes[nameof(TimeProcessed)]]);
-            TimeReleasedUtc = string.IsNullOrWhiteSpace(tsv[indexes["TimeReleasedGMT"]]) ? null : ParseDate(tsv[indexes["TimeReleasedGMT"]]);
-            TimeProcessedUtc = string.IsNullOrWhiteSpace(tsv[indexes["TimeProcessedGMT"]]) ? null : ParseDate(tsv[indexes["TimeProcessedGMT"]]);
-            AnnouncedIn = string.IsNullOrWhiteSpace(tsv[indexes[nameof(AnnouncedIn)]]) ? null : tsv[indexes[nameof(AnnouncedIn)]];
+            catch (Exception e)
+            {
+                Log.Error(e);
+                return false;
+            }
         }
 
         /// <summary>
