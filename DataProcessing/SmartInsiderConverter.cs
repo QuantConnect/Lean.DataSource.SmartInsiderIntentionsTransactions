@@ -292,7 +292,15 @@ namespace QuantConnect.DataProcessing
                 }
 
                 var dataInstance = new T();
-                dataInstance.FromRawData(line, indexes);
+                try
+                {
+                    dataInstance.FromRawData(line, indexes);
+                }
+                catch
+                {
+                    Log.Trace($"SmartInsiderConverter.Process(): Faile to parse line into data instance :: {line}");
+                    continue;
+                }
 
                 var ticker = dataInstance.TickerSymbol;
 
@@ -414,7 +422,7 @@ namespace QuantConnect.DataProcessing
                 var newMinPrice = minPrice;
                 if (!string.IsNullOrEmpty(oldValue[1]))
                 {
-                    var newMin = decimal.Parse(oldValue[2], NumberStyles.Any, CultureInfo.InvariantCulture);
+                    var newMin = decimal.Parse(oldValue[1], NumberStyles.Any, CultureInfo.InvariantCulture);
                     newMinPrice = newMin < minPrice ? newMin : minPrice;
                 }
 
