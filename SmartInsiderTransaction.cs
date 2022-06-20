@@ -116,7 +116,7 @@ namespace QuantConnect.DataSource
         /// <summary>
         /// Post trade holding of the Treasury or Trust in the security traded
         /// </summary>
-        public int? TreasuryHolding { get; set; }
+        public long? TreasuryHolding { get; set; }
 
         /// <summary>
         /// Empty contsructor required for <see cref="Slice.Get{T}()"/>
@@ -150,7 +150,7 @@ namespace QuantConnect.DataSource
             ConversionRate = string.IsNullOrWhiteSpace(tsv[39]) ? (decimal?)null : Convert.ToDecimal(tsv[39], CultureInfo.InvariantCulture);
             AmountAdjustedFactor = string.IsNullOrWhiteSpace(tsv[40]) ? (decimal?)null : Convert.ToDecimal(tsv[40], CultureInfo.InvariantCulture);
             PriceAdjustedFactor = string.IsNullOrWhiteSpace(tsv[41]) ? (decimal?)null : Convert.ToDecimal(tsv[41], CultureInfo.InvariantCulture);
-            TreasuryHolding = string.IsNullOrWhiteSpace(tsv[42]) ? (int?)null : Convert.ToInt32(tsv[42], CultureInfo.InvariantCulture);
+            TreasuryHolding = string.IsNullOrWhiteSpace(tsv[42]) ? (int?)null : Convert.ToInt64(tsv[42], CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -224,7 +224,7 @@ namespace QuantConnect.DataSource
             ConversionRate = string.IsNullOrWhiteSpace(tsv[indexes["ConvRate"]]) ? null : Convert.ToDecimal(tsv[indexes["ConvRate"]], CultureInfo.InvariantCulture);
             AmountAdjustedFactor = string.IsNullOrWhiteSpace(tsv[indexes["AmountAdjFactor"]]) ? null : Convert.ToDecimal(tsv[indexes["AmountAdjFactor"]], CultureInfo.InvariantCulture);
             PriceAdjustedFactor = string.IsNullOrWhiteSpace(tsv[indexes["PriceAdjFactor"]]) ? null : Convert.ToDecimal(tsv[indexes["PriceAdjFactor"]], CultureInfo.InvariantCulture);
-            TreasuryHolding = string.IsNullOrWhiteSpace(tsv[indexes[nameof(TreasuryHolding)]]) ? null : Convert.ToInt32(tsv[indexes[nameof(TreasuryHolding)]], CultureInfo.InvariantCulture);
+            TreasuryHolding = string.IsNullOrWhiteSpace(tsv[indexes[nameof(TreasuryHolding)]]) ? null : Convert.ToInt64(tsv[indexes[nameof(TreasuryHolding)]], CultureInfo.InvariantCulture);
         }
 
         /// <summary>

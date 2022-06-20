@@ -117,7 +117,7 @@ namespace QuantConnect.DataSource
             ExecutionEntity = string.IsNullOrWhiteSpace(tsv[27]) ? (SmartInsiderExecutionEntity?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionEntity>($"\"{tsv[27]}\"");
             ExecutionHolding = string.IsNullOrWhiteSpace(tsv[28]) ? (SmartInsiderExecutionHolding?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[28]}\"");
             ExecutionHolding = ExecutionHolding == SmartInsiderExecutionHolding.Error ? SmartInsiderExecutionHolding.SatisfyStockVesting : ExecutionHolding;
-            Amount = string.IsNullOrWhiteSpace(tsv[29]) ? (int?)null : Convert.ToInt32(tsv[29], CultureInfo.InvariantCulture);
+            Amount = string.IsNullOrWhiteSpace(tsv[29]) ? (int?)null : Convert.ToInt64(tsv[29], CultureInfo.InvariantCulture);
             ValueCurrency = string.IsNullOrWhiteSpace(tsv[30]) ? null : tsv[30];
             AmountValue = string.IsNullOrWhiteSpace(tsv[31]) ? (long?)null : Convert.ToInt64(new String(tsv[31].Where(Char.IsDigit).ToArray()), CultureInfo.InvariantCulture);
             Percentage = string.IsNullOrWhiteSpace(tsv[32]) ? (decimal?)null : Convert.ToDecimal(tsv[32], CultureInfo.InvariantCulture);
@@ -188,7 +188,7 @@ namespace QuantConnect.DataSource
                 }
             }
 
-            Amount = string.IsNullOrWhiteSpace(tsv[indexes["IntentionAmount"]]) ? null : Convert.ToInt32(tsv[indexes["IntentionAmount"]], CultureInfo.InvariantCulture);
+            Amount = string.IsNullOrWhiteSpace(tsv[indexes["IntentionAmount"]]) ? null : Convert.ToInt64(tsv[indexes["IntentionAmount"]], CultureInfo.InvariantCulture);
             ValueCurrency = string.IsNullOrWhiteSpace(tsv[indexes[nameof(ValueCurrency)]]) ? null : tsv[indexes[nameof(ValueCurrency)]];
             AmountValue = string.IsNullOrWhiteSpace(tsv[indexes["IntentionValue"]]) ? null : Convert.ToInt64(tsv[indexes["IntentionValue"]], CultureInfo.InvariantCulture);
             Percentage = string.IsNullOrWhiteSpace(tsv[indexes["IntentionPercentage"]]) ? null : Convert.ToDecimal(tsv[indexes["IntentionPercentage"]], CultureInfo.InvariantCulture);
