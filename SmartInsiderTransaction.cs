@@ -116,7 +116,7 @@ namespace QuantConnect.DataSource
         /// <summary>
         /// Post trade holding of the Treasury or Trust in the security traded
         /// </summary>
-        public int? TreasuryHolding { get; set; }
+        public long? TreasuryHolding { get; set; }
 
         /// <summary>
         /// Empty contsructor required for <see cref="Slice.Get{T}()"/>
@@ -150,7 +150,7 @@ namespace QuantConnect.DataSource
             ConversionRate = string.IsNullOrWhiteSpace(tsv[39]) ? (decimal?)null : Convert.ToDecimal(tsv[39], CultureInfo.InvariantCulture);
             AmountAdjustedFactor = string.IsNullOrWhiteSpace(tsv[40]) ? (decimal?)null : Convert.ToDecimal(tsv[40], CultureInfo.InvariantCulture);
             PriceAdjustedFactor = string.IsNullOrWhiteSpace(tsv[41]) ? (decimal?)null : Convert.ToDecimal(tsv[41], CultureInfo.InvariantCulture);
-            TreasuryHolding = string.IsNullOrWhiteSpace(tsv[42]) ? (int?)null : Convert.ToInt32(tsv[42], CultureInfo.InvariantCulture);
+            TreasuryHolding = string.IsNullOrWhiteSpace(tsv[42]) ? (int?)null : Convert.ToInt64(tsv[42], CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -158,73 +158,87 @@ namespace QuantConnect.DataSource
         /// </summary>
         /// <param name="line">Line of formatted TSV</param>
         /// <param name="indexes">Index per header column</param>
-        public override void FromRawData(string line, Dictionary<string, int> indexes)
+        /// <returns>success of the parsing task</returns>
+        public override bool FromRawData(string line, Dictionary<string, int> indexes)
         {
-            var tsv = line.Split('\t');
-            base.FromRawData(line, indexes);
-
-            BuybackDate = string.IsNullOrWhiteSpace(tsv[indexes[nameof(BuybackDate)]]) ? null : DateTime.ParseExact(tsv[indexes[nameof(BuybackDate)]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-
-            Execution = null;
-            if (!string.IsNullOrWhiteSpace(tsv[indexes["BybackVia"]]))
+            try
             {
-                try
+                var tsv = line.Split('\t');
+                if (!base.FromRawData(line, indexes))
                 {
-                    Execution = JsonConvert.DeserializeObject<SmartInsiderExecution>($"\"{tsv[indexes["BybackVia"]]}\"");
+                    return false;
                 }
-                catch (JsonSerializationException)
-                {
-                    Log.Error($"SmartInsiderTransaction.FromRawData(): New unexpected entry found for Execution: {tsv[indexes["BybackVia"]]}. Parsed as Error.");
-                    Execution = SmartInsiderExecution.Error;
-                }
-            }
 
-            ExecutionEntity = null;
-            if (!string.IsNullOrWhiteSpace(tsv[indexes["BybackBy"]]))
-            {
-                try
-                {
-                    ExecutionEntity = JsonConvert.DeserializeObject<SmartInsiderExecutionEntity>($"\"{tsv[indexes["BybackBy"]]}\"");
-                }
-                catch (JsonSerializationException)
-                {
-                    Log.Error($"SmartInsiderTransaction.FromRawData(): New unexpected entry found for ExecutionEntity: {tsv[indexes["BybackBy"]]}. Parsed as Error.");
-                    ExecutionEntity = SmartInsiderExecutionEntity.Error;
-                }
-            }
+                BuybackDate = string.IsNullOrWhiteSpace(tsv[indexes[nameof(BuybackDate)]]) ? null : DateTime.ParseExact(tsv[indexes[nameof(BuybackDate)]], "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-            ExecutionHolding = null;
-            if (!string.IsNullOrWhiteSpace(tsv[indexes["HoldingType"]]))
-            {
-                try
+                Execution = null;
+                if (!string.IsNullOrWhiteSpace(tsv[indexes["BybackVia"]]))
                 {
-                    ExecutionHolding = JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[indexes["HoldingType"]]}\"");
-                    if (ExecutionHolding == SmartInsiderExecutionHolding.Error)
+                    try
                     {
-                        // This error in particular represents a SatisfyStockVesting field.
-                        ExecutionHolding = SmartInsiderExecutionHolding.SatisfyStockVesting;
+                        Execution = JsonConvert.DeserializeObject<SmartInsiderExecution>($"\"{tsv[indexes["BybackVia"]]}\"");
+                    }
+                    catch (JsonSerializationException)
+                    {
+                        Log.Error($"SmartInsiderTransaction.FromRawData(): New unexpected entry found for Execution: {tsv[indexes["BybackVia"]]}. Parsed as Error.");
+                        Execution = SmartInsiderExecution.Error;
                     }
                 }
-                catch (JsonSerializationException)
-                {
-                    Log.Error($"SmartInsiderTransaction.FromRawData(): New unexpected entry found for ExecutionHolding: {tsv[indexes["HoldingType"]]}. Parsed as Error.");
-                    ExecutionHolding = SmartInsiderExecutionHolding.Error;
-                }
-            }
 
-            Currency = string.IsNullOrWhiteSpace(tsv[indexes[nameof(Currency)]]) ? null : tsv[indexes[nameof(Currency)]];
-            ExecutionPrice = string.IsNullOrWhiteSpace(tsv[indexes["Price"]]) ? null : Convert.ToDecimal(tsv[indexes["Price"]], CultureInfo.InvariantCulture);
-            Amount = string.IsNullOrWhiteSpace(tsv[indexes["TransactionAmount"]]) ? null : Convert.ToDecimal(tsv[indexes["TransactionAmount"]], CultureInfo.InvariantCulture);
-            GBPValue = string.IsNullOrWhiteSpace(tsv[indexes[nameof(GBPValue)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(GBPValue)]], CultureInfo.InvariantCulture);
-            EURValue = string.IsNullOrWhiteSpace(tsv[indexes[nameof(EURValue)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(EURValue)]], CultureInfo.InvariantCulture);
-            USDValue = string.IsNullOrWhiteSpace(tsv[indexes[nameof(USDValue)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(USDValue)]], CultureInfo.InvariantCulture);
-            NoteText = string.IsNullOrWhiteSpace(tsv[indexes[nameof(NoteText)]]) ? null : tsv[indexes[nameof(NoteText)]];
-            BuybackPercentage = string.IsNullOrWhiteSpace(tsv[indexes[nameof(BuybackPercentage)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(BuybackPercentage)]], CultureInfo.InvariantCulture);
-            VolumePercentage = string.IsNullOrWhiteSpace(tsv[indexes[nameof(VolumePercentage)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(VolumePercentage)]], CultureInfo.InvariantCulture);
-            ConversionRate = string.IsNullOrWhiteSpace(tsv[indexes["ConvRate"]]) ? null : Convert.ToDecimal(tsv[indexes["ConvRate"]], CultureInfo.InvariantCulture);
-            AmountAdjustedFactor = string.IsNullOrWhiteSpace(tsv[indexes["AmountAdjFactor"]]) ? null : Convert.ToDecimal(tsv[indexes["AmountAdjFactor"]], CultureInfo.InvariantCulture);
-            PriceAdjustedFactor = string.IsNullOrWhiteSpace(tsv[indexes["PriceAdjFactor"]]) ? null : Convert.ToDecimal(tsv[indexes["PriceAdjFactor"]], CultureInfo.InvariantCulture);
-            TreasuryHolding = string.IsNullOrWhiteSpace(tsv[indexes[nameof(TreasuryHolding)]]) ? null : Convert.ToInt32(tsv[indexes[nameof(TreasuryHolding)]], CultureInfo.InvariantCulture);
+                ExecutionEntity = null;
+                if (!string.IsNullOrWhiteSpace(tsv[indexes["BybackBy"]]))
+                {
+                    try
+                    {
+                        ExecutionEntity = JsonConvert.DeserializeObject<SmartInsiderExecutionEntity>($"\"{tsv[indexes["BybackBy"]]}\"");
+                    }
+                    catch (JsonSerializationException)
+                    {
+                        Log.Error($"SmartInsiderTransaction.FromRawData(): New unexpected entry found for ExecutionEntity: {tsv[indexes["BybackBy"]]}. Parsed as Error.");
+                        ExecutionEntity = SmartInsiderExecutionEntity.Error;
+                    }
+                }
+
+                ExecutionHolding = null;
+                if (!string.IsNullOrWhiteSpace(tsv[indexes["HoldingType"]]))
+                {
+                    try
+                    {
+                        ExecutionHolding = JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[indexes["HoldingType"]]}\"");
+                        if (ExecutionHolding == SmartInsiderExecutionHolding.Error)
+                        {
+                            // This error in particular represents a SatisfyStockVesting field.
+                            ExecutionHolding = SmartInsiderExecutionHolding.SatisfyStockVesting;
+                        }
+                    }
+                    catch (JsonSerializationException)
+                    {
+                        Log.Error($"SmartInsiderTransaction.FromRawData(): New unexpected entry found for ExecutionHolding: {tsv[indexes["HoldingType"]]}. Parsed as Error.");
+                        ExecutionHolding = SmartInsiderExecutionHolding.Error;
+                    }
+                }
+
+                Currency = string.IsNullOrWhiteSpace(tsv[indexes[nameof(Currency)]]) ? null : tsv[indexes[nameof(Currency)]];
+                ExecutionPrice = string.IsNullOrWhiteSpace(tsv[indexes["Price"]]) ? null : Convert.ToDecimal(tsv[indexes["Price"]], CultureInfo.InvariantCulture);
+                Amount = string.IsNullOrWhiteSpace(tsv[indexes["TransactionAmount"]]) ? null : Convert.ToDecimal(tsv[indexes["TransactionAmount"]], CultureInfo.InvariantCulture);
+                GBPValue = string.IsNullOrWhiteSpace(tsv[indexes[nameof(GBPValue)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(GBPValue)]], CultureInfo.InvariantCulture);
+                EURValue = string.IsNullOrWhiteSpace(tsv[indexes[nameof(EURValue)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(EURValue)]], CultureInfo.InvariantCulture);
+                USDValue = string.IsNullOrWhiteSpace(tsv[indexes[nameof(USDValue)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(USDValue)]], CultureInfo.InvariantCulture);
+                NoteText = string.IsNullOrWhiteSpace(tsv[indexes[nameof(NoteText)]]) ? null : tsv[indexes[nameof(NoteText)]];
+                BuybackPercentage = string.IsNullOrWhiteSpace(tsv[indexes[nameof(BuybackPercentage)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(BuybackPercentage)]], CultureInfo.InvariantCulture);
+                VolumePercentage = string.IsNullOrWhiteSpace(tsv[indexes[nameof(VolumePercentage)]]) ? null : Convert.ToDecimal(tsv[indexes[nameof(VolumePercentage)]], CultureInfo.InvariantCulture);
+                ConversionRate = string.IsNullOrWhiteSpace(tsv[indexes["ConvRate"]]) ? null : Convert.ToDecimal(tsv[indexes["ConvRate"]], CultureInfo.InvariantCulture);
+                AmountAdjustedFactor = string.IsNullOrWhiteSpace(tsv[indexes["AmountAdjFactor"]]) ? null : Convert.ToDecimal(tsv[indexes["AmountAdjFactor"]], CultureInfo.InvariantCulture);
+                PriceAdjustedFactor = string.IsNullOrWhiteSpace(tsv[indexes["PriceAdjFactor"]]) ? null : Convert.ToDecimal(tsv[indexes["PriceAdjFactor"]], CultureInfo.InvariantCulture);
+                TreasuryHolding = string.IsNullOrWhiteSpace(tsv[indexes[nameof(TreasuryHolding)]]) ? null : Convert.ToInt64(tsv[indexes[nameof(TreasuryHolding)]], CultureInfo.InvariantCulture);
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                return false;
+            }
         }
 
         /// <summary>

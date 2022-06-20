@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from QuantConnect.DataSource import *
 
 ### <summary>
 ### Example algorithm demonstrating usage of SmartInsider data

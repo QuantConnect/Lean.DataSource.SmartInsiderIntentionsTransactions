@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.DataSource;

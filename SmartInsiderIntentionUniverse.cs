@@ -13,12 +13,10 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
 using System;
 using System.Globalization;
 using System.IO;
 using QuantConnect.Data;
-using QuantConnect.Logging;
 
 namespace QuantConnect.DataSource
 {
@@ -108,7 +106,7 @@ namespace QuantConnect.DataSource
                 MinimumPrice = csv[3].IfNotNullOrEmpty<decimal?>(x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)),
                 MaximumPrice = csv[4].IfNotNullOrEmpty<decimal?>(x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)),
                 USDMarketCap = csv[2].IfNotNullOrEmpty<decimal?>(x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)),
-                Amount = csv[5].IfNotNullOrEmpty<int?>(x => int.Parse(x)),
+                Amount = csv[5].IfNotNullOrEmpty<long?>(x => long.Parse(x)),
                 AmountValue = amountValue,
                 Percentage = csv[7].IfNotNullOrEmpty<decimal?>(x => decimal.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture))
             };

@@ -16,15 +16,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
-using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.DataProcessing;
 using QuantConnect.DataSource;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.DataLibrary.Tests
 {
