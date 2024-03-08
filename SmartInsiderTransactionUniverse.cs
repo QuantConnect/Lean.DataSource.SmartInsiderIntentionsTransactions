@@ -16,14 +16,16 @@
 using System;
 using System.Globalization;
 using System.IO;
+using NodaTime;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.DataSource
 {
     /// <summary>
     /// Smart Insider Transaction Universe
     /// </summary>
-    public class SmartInsiderTransactionUniverse : BaseData
+    public class SmartInsiderTransactionUniverse : BaseDataCollection
     {
         private static readonly TimeSpan _period = TimeSpan.FromDays(1);
         
@@ -85,7 +87,8 @@ namespace QuantConnect.DataSource
                     "universe",
                     $"{date:yyyyMMdd}.csv"
                 ),
-                SubscriptionTransportMedium.LocalFile
+                SubscriptionTransportMedium.LocalFile,
+                FileFormat.FoldingCollection
             );
         }
 
@@ -119,11 +122,40 @@ namespace QuantConnect.DataSource
         }
 
         /// <summary>
+        /// Specifies the timezone of this data source
+        /// </summary>
+        /// <returns>Timezone</returns>
+        public override DateTimeZone DataTimeZone()
+        {
+            return TimeZones.Utc;
+        }
+
+        /// <summary>
         /// Converts the instance to string
         /// </summary>
         public override string ToString()
         {
             return $"{Symbol},{Amount},{MinimumExecutionPrice},{MaximumExecutionPrice},{USDValue},{BuybackPercentage},{VolumePercentage},{USDMarketCap}";
+        }
+
+        /// <summary>
+        /// Clone implementation
+        /// </summary>
+        public override BaseData Clone()
+        {
+            return new SmartInsiderTransactionUniverse()
+            {
+                Amount = Amount,
+                MinimumExecutionPrice = MinimumExecutionPrice,
+                MaximumExecutionPrice = MaximumExecutionPrice,
+                USDValue = USDValue,
+                BuybackPercentage = BuybackPercentage,
+                VolumePercentage = VolumePercentage,
+                USDMarketCap = USDMarketCap,
+                Data = Data,
+                Symbol = Symbol,
+                Time = Time,
+            };
         }
     }
 }

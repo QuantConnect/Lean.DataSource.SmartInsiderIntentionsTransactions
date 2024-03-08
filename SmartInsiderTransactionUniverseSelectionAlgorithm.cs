@@ -34,18 +34,32 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             // add a custom universe data source (defaults to usa-equity)
-            AddUniverse<SmartInsiderTransactionUniverse>("SmartInsiderTransactionUniverse", Resolution.Daily, data =>
+            var universe = AddUniverse<SmartInsiderTransactionUniverse>(data =>
             {
-                foreach (var datum in data)
+                foreach (SmartInsiderTransactionUniverse datum in data)
                 {
                     Log($"{datum.Symbol},{datum.Amount},{datum.MinimumExecutionPrice},{datum.MaximumExecutionPrice},{datum.USDValue},{datum.BuybackPercentage},{datum.VolumePercentage},{datum.USDMarketCap}");
                 }
 
                 // define our selection criteria
-                return from d in data 
-                    where d.BuybackPercentage > 0.005m && d.USDMarketCap > 100000000m
-                    select d.Symbol;
+                return from SmartInsiderTransactionUniverse d in data
+                       where d.BuybackPercentage > 0.005m && d.USDMarketCap > 100000000m
+                       select d.Symbol;
             });
+
+            var history = History(universe, 10).ToList();
+            if (history.Count != 10)
+            {
+                throw new System.Exception($"Unexpected historical data count!");
+            }
+            foreach (var dataForDate in history)
+            {
+                var coarseData = dataForDate.ToList();
+                if (coarseData.Count < 1)
+                {
+                    throw new System.Exception($"Unexpected historical universe data!");
+                }
+            }
         }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)

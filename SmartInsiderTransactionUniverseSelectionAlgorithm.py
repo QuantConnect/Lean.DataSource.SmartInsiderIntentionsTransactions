@@ -13,7 +13,7 @@
 
 from AlgorithmImports import *
 
-class SmartInsiderTransactionUniverseAlgorithm(QCAlgorithm): 
+class SmartInsiderTransactionUniverseAlgorithm(QCAlgorithm):
     def Initialize(self):
         # Data ADDED via universe selection is added with Daily resolution.
         self.UniverseSettings.Resolution = Resolution.Daily
@@ -23,7 +23,15 @@ class SmartInsiderTransactionUniverseAlgorithm(QCAlgorithm):
         self.SetCash(100000)
 
         # add a custom universe data source (defaults to usa-equity)
-        self.AddUniverse(SmartInsiderTransactionUniverse, "SmartInsiderTransactionUniverse", Resolution.Daily, self.UniverseSelection)
+        universe = self.AddUniverse(SmartInsiderTransactionUniverse, self.UniverseSelection)
+
+        history = self.History(universe, TimeSpan(10, 0, 0, 0))
+        if len(history) != 10:
+            raise ValueError(f"Unexpected history count {len(history)}!")
+
+        for dataForDate in history:
+            if len(dataForDate) < 1:
+                raise ValueError(f"Unexpected historical universe data!")
         
     def UniverseSelection(self, data):
         for datum in data:
@@ -31,8 +39,8 @@ class SmartInsiderTransactionUniverseAlgorithm(QCAlgorithm):
 
         # define our selection criteria
         return [d.Symbol for d in data \
-                    if d.BuybackPercentage > 0.005 \
-                    and d.USDMarketCap > 100000000]
+                    if d.BuybackPercentage and d.BuybackPercentage > 0.005 \
+                    and d.USDMarketCap and d.USDMarketCap > 100000000]
 
     def OnSecuritiesChanged(self, changes):
         self.Log(changes.ToString())
