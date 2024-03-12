@@ -16,14 +16,16 @@
 using System;
 using System.Globalization;
 using System.IO;
+using NodaTime;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.DataSource
 {
     /// <summary>
     /// Smart Insider Intentions Universe
     /// </summary>
-    public class SmartInsiderIntentionUniverse : BaseData
+    public class SmartInsiderIntentionUniverse : BaseDataCollection
     {
         private static readonly TimeSpan _period = TimeSpan.FromDays(1);
         
@@ -80,7 +82,8 @@ namespace QuantConnect.DataSource
                     "universe",
                     $"{date:yyyyMMdd}.csv"
                 ),
-                SubscriptionTransportMedium.LocalFile
+                SubscriptionTransportMedium.LocalFile,
+                FileFormat.FoldingCollection
             );
         }
 
@@ -113,11 +116,39 @@ namespace QuantConnect.DataSource
         }
 
         /// <summary>
+        /// Specifies the timezone of this data source
+        /// </summary>
+        /// <returns>Timezone</returns>
+        public override DateTimeZone DataTimeZone()
+        {
+            return TimeZones.Utc;
+        }
+
+        /// <summary>
         /// Converts the instance to string
         /// </summary>
         public override string ToString()
         {
             return $"{Symbol},{Amount},{AmountValue},{Percentage},{MinimumPrice},{MaximumPrice},{USDMarketCap}";
+        }
+
+        /// <summary>
+        /// Clone implementation
+        /// </summary>
+        public override BaseData Clone()
+        {
+            return new SmartInsiderIntentionUniverse()
+            {
+                Amount = Amount,
+                AmountValue = AmountValue,
+                Percentage = Percentage,
+                MinimumPrice = MinimumPrice,
+                MaximumPrice = MaximumPrice,
+                USDMarketCap = USDMarketCap,
+                Data = Data,
+                Symbol = Symbol,
+                Time = Time,
+            };
         }
     }
 }
