@@ -47,9 +47,9 @@ namespace QuantConnect.Algorithm.CSharp
             AddUniverse<SmartInsiderTransactionUniverse>("SmartInsiderTransactionUniverse", Resolution.Daily, UniverseSelectionMethod);
         }
 
-        private IEnumerable<Symbol> UniverseSelectionMethod(IEnumerable<SmartInsiderTransactionUniverse> data)
+        private IEnumerable<Symbol> UniverseSelectionMethod(IEnumerable<BaseData> data)
         {
-            _datum = data.FirstOrDefault(datum => datum.Symbol.Value == _symbol.Value);
+            _datum = data.OfType<SmartInsiderTransactionUniverse>().FirstOrDefault(datum => datum.Symbol.Value == _symbol.Value);
 
             if (_datum != null)
             {

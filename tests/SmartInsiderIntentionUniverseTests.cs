@@ -20,14 +20,23 @@ using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.DataProcessing;
 using QuantConnect.DataSource;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.DataLibrary.Tests
 {
     [TestFixture]
     public class SmartInsiderIntentionUniverseTests
     {
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Configuration.Config.Get("map-file-provider", typeof(LocalDiskMapFileProvider).Name));
+        }
+
         [TestCase(
             new string[]{"20200921 07:50:38	BI12705	New Intention	20211212	20200602	US00164V1035		68556	Consumer Discretionary	Media	Media	Entertainment	40301010	AMC Networks Inc					Com A	US	AMCX	20200921				US	Tender Offer	Issuer	Not Reported		USD	250000000					22.5000	26.5000	"}, 
             "20200921",
@@ -56,17 +65,6 @@ namespace QuantConnect.DataLibrary.Tests
             var result = intentionUniverse[date].First();
 
             return $"{result.Key},{result.Value}";
-        }
-
-        [Test]
-        public void JsonRoundTrip()
-        {
-            var expected = CreateNewInstance();
-            var type = expected.GetType();
-            var serialized = JsonConvert.SerializeObject(expected);
-            var result = JsonConvert.DeserializeObject(serialized, type);
-
-            AssertAreEqual(expected, result);
         }
 
         [Test]

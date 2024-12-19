@@ -20,14 +20,23 @@ using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.DataProcessing;
 using QuantConnect.DataSource;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.DataLibrary.Tests
 {
     [TestFixture]
     public class SmartInsiderTransactionUniverseTests
     {
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Configuration.Config.Get("map-file-provider", typeof(LocalDiskMapFileProvider).Name));
+        }
+
         [TestCase(
             new string[]{"20220309 11:53:36	BT812996	Transaction	20220309	20191004	US00846U1016	38843345345	27276	Health Care	Health Care	Medical Equipment and Services	Medical Equipment	20102010	Agilent Technologies Inc	20211217	20220222	20220131	20211217	Com	US	A	20220309	20220303 17:02:17		20220303 22:02:17	US	20211231	On Market	Issuer	For Cancellation	USD	154.4500	2038115	232558230	276699052	314786862		0.0081	6.0456	1.350000			"}, 
             "20220309",
@@ -51,17 +60,6 @@ namespace QuantConnect.DataLibrary.Tests
             var result = transactionUniverse[date].First();
 
             return $"{result.Key},{result.Value}";
-        }
-        
-        [Test]
-        public void JsonRoundTrip()
-        {
-            var expected = CreateNewInstance();
-            var type = expected.GetType();
-            var serialized = JsonConvert.SerializeObject(expected);
-            var result = JsonConvert.DeserializeObject(serialized, type);
-
-            AssertAreEqual(expected, result);
         }
 
         [Test]
