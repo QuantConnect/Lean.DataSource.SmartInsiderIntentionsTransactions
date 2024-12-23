@@ -18,6 +18,9 @@ using QuantConnect.DataSource;
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.DataLibrary.Tests
 {
@@ -25,6 +28,12 @@ namespace QuantConnect.DataLibrary.Tests
     public class SmartInsiderTests
     {
         private static Symbol SymbolsAAPL = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Configuration.Config.Get("map-file-provider", typeof(LocalDiskMapFileProvider).Name));
+        }
 
         [Test]
         public void ErrorGetsMappedToSatisfyStockVesting()
